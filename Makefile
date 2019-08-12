@@ -1,4 +1,4 @@
-SOURCE_FILES=bash_aliases bash_functions bash_logout bashrc
+SOURCE_FILES=bash_aliases bash_functions bash_logout bashrc dircolors
 INSTALL_FILES=( $(addprefix $(HOME)/.,$(SOURCE_FILES)) )
 
 .PHONY: diff install uninstall
