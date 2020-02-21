@@ -134,6 +134,3 @@ export DISPLAY=:0
 # set PATH so it includes user's private bin directories
 PATH=".:$HOME/bin:$HOME/.local/bin:$PATH"
 
-#====[ WSL PATHS ]==========================================
-PATH="$PATH:/mnt/c/Windows/System32/"
-export PATH=$(echo "$PATH" | sed -e 's/:\/mnt\/c\/Program Files\/nodejs//')
