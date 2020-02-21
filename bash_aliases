@@ -24,6 +24,7 @@ alias r='fc -s '
 alias diff='colordiff'
 alias cpptidy='clang-format -i'
 alias cprofile='valgrind --tool=callgrind'
+alias myip="ifconfig wifi0 | grep 'inet ' | awk '{print \$2}'"
 
 #====[ GIT ]================================================
 alias git.junk='git ls-files --others --exclude-standard'
