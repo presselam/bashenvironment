@@ -3,13 +3,53 @@ basedir="/mnt/d"
 WORKDIR="$basedir/Projects"
 CERTDIR="$basedir/certification"
 CXAPDIR="$basedir/cxap"
+GDDIR="${basedir}/GoogleDrive"
 
 
 complete -F _work_completer work
 complete -F _cert_completer cert
+complete -F _gd_completer gd
 complete -W "$(ls $CXAPDIR)"   cxap
 
 alias cdw='cd ~1'
+
+function _gd_completer {
+#  local IFS=$'\n'
+  dir=$GDDIR
+  for name in "${COMP_WORDS[@]}"
+  do
+    if [ -d "$dir/${name//\'/}" ]; then
+      dir=$dir/${name//\'/}
+    fi
+  done
+
+  COMPREPLY=( $(compgen -W "$(ls "$dir")" -- "${COMP_WORDS[$COMP_CWORD]}") )
+  i=0
+  for item in ${COMPREPLY[*]}
+  do
+    if [[ ${item} == *' '* ]]; then
+      COMPREPLY[$i]="'${item}'"
+    fi
+    
+    (( i++ ))
+  done
+
+  return 0
+}
+
+function gd {
+  dir=$GDDIR
+  for arg in "$@"
+  do
+    dir="$dir/$arg"
+  done
+
+echo "[${dir}]"
+
+  if [ -d "$dir" ]; then
+    pushd "$dir"
+  fi
+}
 
 function _work_completer {
   dir=$WORKDIR
