@@ -7,13 +7,19 @@ dos2unix
 exuberant-ctags
 g++
 gcc
+jq
 libdbd-mysql-perl
 libdbi-perl
 libfile-slurp-perl
+libjson-perl
 libmail-sendmail-perl
+libperl6-slurp-perl
+libtext-csv-perl
+libtext-template-perl
 libtext-template-perl
 libxml-libxml-perl
 libxml2-utils
+libyaml-tiny-perl
 mysql-common
 perltidy
 shellcheck
@@ -22,6 +28,3 @@ vim-addon-manager
 vim-syntax-docker
 xalan
 xterm
-libtext-csv-perl
-libtext-template-perl
-libperl6-slurp-perl
