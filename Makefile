@@ -1,7 +1,7 @@
 SOURCE_FILES=bash_aliases bash_functions bash_logout bashrc dircolors aptdepends
 INSTALL_FILES=( $(addprefix $(HOME)/.,$(SOURCE_FILES)) )
 
-.PHONY: diff install uninstall aptinstall
+.PHONY: diff install uninstall aptinstall bin
 
 diff: $(addprefix diff-, $(SOURCE_FILES))
 	
@@ -9,7 +9,7 @@ diff-% : $(SOURCE_FILES)
 	@echo Comparing: $* 
 	-colordiff $(addprefix $(HOME)/.,$*) $*
 
-install: $(addprefix inst-, $(SOURCE_FILES))
+install: $(addprefix inst-, $(SOURCE_FILES)) bin
 
 inst-% : $(SOURCE_FILES)
 	-rsync -zvh $* $(addprefix $(HOME)/.,$*)
@@ -24,6 +24,8 @@ sync: $(addprefix sync-, $(SOURCE_FILES))
 sync-% : $(SOURCE_FILES)
 	-rsync  $(addprefix $(HOME)/.,$*) $*
 
+bin : 
+	rsync -avhc --include='bin/***' bin/ $(HOME)/bin
 
 aptinstall : 
 	sudo apt update -y
