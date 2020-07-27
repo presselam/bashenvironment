@@ -11,10 +11,6 @@ INSTALL_FILES=( $(addprefix $(HOME)/.,$(SOURCE_FILES)) )
 
 .PHONY: diff install uninstall aptinstall bin
 
-test :
-	@echo $(BIN_INCLUDE)
-
-
 diff: $(addprefix diff-, $(SOURCE_FILES))
 	
 diff-% : $(addprefix src/, $(SOURCE_FILES))
