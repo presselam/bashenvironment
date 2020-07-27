@@ -1,31 +1,33 @@
-SOURCE_FILES=bash_aliases bash_functions bash_logout bashrc dircolors aptdepends
+SOURCE_FILES=$(patsubst src/%,%,$(wildcard src/.[a-zA-Z]*))
+BIN_FILES=$(patsubst src/%,%,$(wildcard bin/*))
+
+INCLUDE= $(addprefix --include=, $(SOURCE_FILES))
+BIN_INCLUDE= $(addprefix --include=, $(BIN_FILES))
+
+EXCLUDE=--exclude='*.bak' --exclude='*'
+RSYC_OPT=-avhc
+
 INSTALL_FILES=( $(addprefix $(HOME)/.,$(SOURCE_FILES)) )
 
 .PHONY: diff install uninstall aptinstall bin
 
 diff: $(addprefix diff-, $(SOURCE_FILES))
 	
-diff-% : $(SOURCE_FILES)
-	@echo Comparing: $* 
-	-colordiff $(addprefix $(HOME)/.,$*) $*
+diff-% : $(addprefix src/, $(SOURCE_FILES))
+	-colordiff src/$* ${HOME}/$* || true
 
-install: $(addprefix inst-, $(SOURCE_FILES)) bin
+fake :
+	rsync --dry-run $(RSYC_OPT) $(INCLUDE) $(EXCLUDE) src/ ${HOME}/
+	rsync $(RSYC_OPT) $(BIN_INCLUDE) $(EXCLUDE) bin/ $(HOME)/bin/
 
-inst-% : $(SOURCE_FILES)
-	-rsync -zvh $* $(addprefix $(HOME)/.,$*)
 
-uninstall: $(addprefix unin-, $(SOURCE_FILES))
+sync :
+	rsync $(RSYC_OPT) $(INCLUDE) $(EXCLUDE) ${HOME}/ src/
+	rsync $(RSYC_OPT) $(BIN_INCLUDE) $(EXCLUDE) $(HOME)/bin/ bin/
 
-unin-% : $(SOURCE_FILES)
-	-rm $(addprefix $(HOME)/.,$*)
-
-sync: $(addprefix sync-, $(SOURCE_FILES))
-
-sync-% : $(SOURCE_FILES)
-	-rsync  $(addprefix $(HOME)/.,$*) $*
-
-bin : 
-	rsync -avhc --include='bin/***' bin/ $(HOME)/bin
+install : 
+	rsync $(RSYC_OPT) $(INCLUDE) $(EXCLUDE) src/ ${HOME}/
+	rsync $(RSYC_OPT) $(BIN_INCLUDE) $(EXCLUDE) bin/ $(HOME)/bin/
 
 aptinstall : 
 	sudo apt update -y

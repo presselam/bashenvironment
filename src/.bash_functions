@@ -1,5 +1,5 @@
 
-basedir="/mnt/d"
+basedir="/mnt/c/workspace"
 WORKDIR="$basedir/Projects"
 CERTDIR="$basedir/certification"
 CXAPDIR="$basedir/cxap"
