@@ -2,6 +2,11 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
+if [[ -z ${WORKSPACE_DIR} ]]; then
+  echo "WORKSPACE_DIR must be configured; not continuing"
+  return
+fi
+
 # If not running interactively, don't do anything
 case $- in
     *i*) ;;
@@ -44,6 +49,7 @@ case "$TERM" in
     xterm-color|*-256color) color_prompt=yes;;
 esac
 
+
 # uncomment for a colored prompt, if the terminal has the capability; turned
 # off by default to not distract the user: the focus in a terminal window
 # should be on the output of commands, not on the prompt
@@ -62,7 +68,7 @@ fi
 
 if [ "$color_prompt" = yes ]; then
 #    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
- PS1="\[\033[38;5;11m\]\u\[$(tput sgr0)\]\[\033[38;5;6m\][\[$(tput bold)\]\[$(tput sgr0)\]\[\033[38;5;15m\]\W\[$(tput sgr0)\]\[$(tput sgr0)\]\[\033[38;5;6m\]]:\[$(tput sgr0)\]\[\033[38;5;15m\] \[$(tput sgr0)\]"
+ PS1="\[\033[38;5;226m\]\u\[$(tput sgr0)\]\[\033[38;5;6m\][\[$(tput bold)\]\[$(tput sgr0)\]\[\033[38;5;15m\]\W\[$(tput sgr0)\]\[$(tput sgr0)\]\[\033[38;5;6m\]]:\[$(tput sgr0)\]\[\033[38;5;15m\] \[$(tput sgr0)\]"
 else
     PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 fi
@@ -113,17 +119,23 @@ if ! shopt -oq posix; then
   fi
 fi
 
-#====[ proprietary ]========================================
-if [ -f ~/.bash_proprietary ]; then
-    . ~/.bash_proprietary
-fi
 #====[ custom functions ]===================================
 if [ -f ~/.bash_functions ]; then
     . ~/.bash_functions
 fi
 
+#====[ proprietary ]========================================
+if [ -f ~/.bash_proprietary ]; then
+    . ~/.bash_proprietary
+fi
+
 #====[ perl thingies ]======================================
 export PERL5LIB=$HOME/lib
 
+#====[ docker thingies ]====================================
+export DOCKER_HOST=tcp://localhost:2375
+export DISPLAY=:0
+
 # set PATH so it includes user's private bin directories
-PATH=".:$HOME/bin:/mnt/d/Projects/simaf/bin:$PATH"
+PATH=".:$HOME/bin:$HOME/.local/bin:$PATH"
+

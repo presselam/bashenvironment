@@ -1,20 +1,28 @@
-SOURCE_FILES=bash_aliases bash_functions bash_logout bashrc
-INSTALL_FILES=( $(addprefix $(HOME)/.,$(SOURCE_FILES)) )
+SOURCE_FILES=$(patsubst src/%,%,$(wildcard src/.[a-zA-Z]*))
+SOURCE_FILES+=$(patsubst src/%,%,$(wildcard src/bin/*))
 
-.PHONY: diff install uninstall
+INCLUDE=--include='bin' $(addprefix --include=, $(SOURCE_FILES))
+
+EXCLUDE=--exclude='*.bak' --exclude='*'
+RSYC_OPT=-avhc
+
+.PHONY: diff install uninstall aptinstall bin
 
 diff: $(addprefix diff-, $(SOURCE_FILES))
 	
-diff-% : $(SOURCE_FILES)
-	@echo Comparing: $* 
-	-colordiff $(addprefix $(HOME)/.,$*) $*
+diff-% : $(addprefix src/, $(SOURCE_FILES))
+	-colordiff src/$* ${HOME}/$* || true
 
-install: $(addprefix inst-, $(SOURCE_FILES))
+fake :
+	rsync --dry-run $(RSYC_OPT) $(INCLUDE) $(EXCLUDE) src/ ${HOME}/
 
-inst-% : $(SOURCE_FILES)
-	-cp $* $(addprefix $(HOME)/.,$*)
+sync :
+	rsync $(RSYC_OPT) $(INCLUDE) $(EXCLUDE) ${HOME}/ src/
 
-uninstall: $(addprefix unin-, $(SOURCE_FILES))
+install : 
+	rsync $(RSYC_OPT) $(INCLUDE) $(EXCLUDE) src/ ${HOME}/
 
-unin-% : $(SOURCE_FILES)
-	-rm $(addprefix $(HOME)/.,$*)
+aptinstall : 
+	sudo apt update -y
+	while read pkg; do sudo apt install -y "$$pkg"; done < aptdepends
+	sudo apt update -y
