@@ -2,6 +2,11 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
+if [[ -z ${WORKSPACE_DIR} ]]; then
+  echo "WORKSPACE_DIR must be configured; not continuing"
+  return
+fi
+
 # If not running interactively, don't do anything
 case $- in
     *i*) ;;
