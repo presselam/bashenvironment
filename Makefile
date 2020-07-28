@@ -1,13 +1,10 @@
 SOURCE_FILES=$(patsubst src/%,%,$(wildcard src/.[a-zA-Z]*))
-BIN_FILES=$(patsubst src/%,%,$(wildcard bin/*))
+SOURCE_FILES+=$(patsubst src/%,%,$(wildcard src/bin/*))
 
-INCLUDE= $(addprefix --include=, $(SOURCE_FILES))
-BIN_INCLUDE= $(addprefix --include=, $(BIN_FILES))
+INCLUDE=--include='bin' $(addprefix --include=, $(SOURCE_FILES))
 
 EXCLUDE=--exclude='*.bak' --exclude='*'
 RSYC_OPT=-avhc
-
-INSTALL_FILES=( $(addprefix $(HOME)/.,$(SOURCE_FILES)) )
 
 .PHONY: diff install uninstall aptinstall bin
 
@@ -18,16 +15,12 @@ diff-% : $(addprefix src/, $(SOURCE_FILES))
 
 fake :
 	rsync --dry-run $(RSYC_OPT) $(INCLUDE) $(EXCLUDE) src/ ${HOME}/
-	rsync $(RSYC_OPT) $(BIN_INCLUDE) $(EXCLUDE) bin/ $(HOME)/bin/
-
 
 sync :
 	rsync $(RSYC_OPT) $(INCLUDE) $(EXCLUDE) ${HOME}/ src/
-	rsync $(RSYC_OPT) $(BIN_INCLUDE) $(EXCLUDE) $(HOME)/bin/ bin/
 
 install : 
 	rsync $(RSYC_OPT) $(INCLUDE) $(EXCLUDE) src/ ${HOME}/
-	rsync $(RSYC_OPT) $(BIN_INCLUDE) $(EXCLUDE) bin/ $(HOME)/bin/
 
 aptinstall : 
 	sudo apt update -y
