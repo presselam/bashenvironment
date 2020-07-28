@@ -1,5 +1,5 @@
 SOURCE_FILES=$(patsubst src/%,%,$(wildcard src/.[a-zA-Z]*))
-BIN_FILES=$(patsubst src/%,%,$(wildcard bin/*))
+BIN_FILES=$(patsubst bin/%,%,$(wildcard bin/*))
 
 INCLUDE= $(addprefix --include=, $(SOURCE_FILES))
 BIN_INCLUDE= $(addprefix --include=, $(BIN_FILES))
@@ -18,7 +18,7 @@ diff-% : $(addprefix src/, $(SOURCE_FILES))
 
 fake :
 	rsync --dry-run $(RSYC_OPT) $(INCLUDE) $(EXCLUDE) src/ ${HOME}/
-	rsync $(RSYC_OPT) $(BIN_INCLUDE) $(EXCLUDE) bin/ $(HOME)/bin/
+	rsync --dry-run $(RSYC_OPT) $(BIN_INCLUDE) $(EXCLUDE) bin/ $(HOME)/bin/
 
 
 sync :
