@@ -214,7 +214,24 @@ function windir {
   bs="${bs//\/mnt\/c\//C:\\}"
 
   bs="${bs//\//\\}"
-  echo $bs  
+  echo "$bs"  
 }
+
+function s3touch () {
+
+  fileUri=
+  if [[ $# == 1 ]]; then
+    fileUri=$1
+  elif [[ $# == 2 ]]; then
+    fileUri="s3://$1/$2"
+  else
+    message_error "Invalid file specified"
+    return 1
+  fi
+
+  echo "FileUri:[${fileUri}]"
+  aws s3 cp "${fileUri}" "${fileUri}" --metadata '{"x-amz-metadata-directive":"REPLACE"}'
+}
+
 
 
