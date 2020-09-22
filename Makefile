@@ -24,5 +24,5 @@ install :
 
 aptinstall : 
 	sudo apt update -y
-	while read pkg; do sudo apt install -y "$$pkg"; done < aptdepends
+	while read pkg; do sudo apt install -y "$$pkg"; done < ${HOME}/.aptdepends
 	sudo apt update -y
