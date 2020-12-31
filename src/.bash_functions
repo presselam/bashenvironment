@@ -1,59 +1,48 @@
 
 basedir="${WORKSPACE_DIR}"
-WORKDIR="$basedir/Projects"
-CERTDIR="$basedir/certification"
-CXAPDIR="$basedir/cxap"
-GDDIR="${basedir}/GoogleDrive"
+WORKDIR="${basedir}/projects"
+CERTDIR="${basedir}/certification"
+CXAPDIR="${basedir}/cxap"
+EXPERDIR="${basedir}/experiment"
 
 
 complete -F _work_completer work
 complete -F _cert_completer cert
-complete -F _gd_completer gd
-complete -W "$(ls $CXAPDIR)"   cxap
+complete -F _exp_completer  exp
+complete -F _cxap_completer cxap
 
 alias cdw='cd ~1'
 
-function _gd_completer {
-#  local IFS=$'\n'
-  dir=$GDDIR
-  for name in "${COMP_WORDS[@]}"
+
+function exp {
+  dir=$EXPERDIR
+  for arg in "$@"
   do
-    if [ -d "$dir/${name//\'/}" ]; then
-      dir=$dir/${name//\'/}
+    dir="${dir}/${arg}"
+  done
+
+  if [ -d "${dir}" ]; then
+    pushd "${dir}" || return
+  fi
+}
+
+function _exp_completer {
+  dir=$EXPERDIR
+  for name in "${COMP_WORDS[@]:1}"
+  do
+    if [ -d "$dir/$name" ]; then
+      dir=$dir/$name
     fi
   done
 
   COMPREPLY=( $(compgen -W "$(ls "$dir")" -- "${COMP_WORDS[$COMP_CWORD]}") )
-  i=0
-  for item in ${COMPREPLY[*]}
-  do
-    if [[ ${item} == *' '* ]]; then
-      COMPREPLY[$i]="'${item}'"
-    fi
-    
-    (( i++ ))
-  done
 
   return 0
 }
 
-function gd {
-  dir=$GDDIR
-  for arg in "$@"
-  do
-    dir="$dir/$arg"
-  done
-
-echo "[${dir}]"
-
-  if [ -d "$dir" ]; then
-    pushd "$dir"
-  fi
-}
-
 function _work_completer {
   dir=$WORKDIR
-  for name in "${COMP_WORDS[@]}"
+  for name in "${COMP_WORDS[@]:1}"
   do
     if [ -d "$dir/$name" ]; then
       dir=$dir/$name
@@ -67,7 +56,7 @@ function _work_completer {
 
 function _cert_completer {
   dir=$CERTDIR
-  for name in "${COMP_WORDS[@]}"
+  for name in "${COMP_WORDS[@]:1}"
   do
     if [ -d "$dir/$name" ]; then
       dir=$dir/$name
@@ -83,18 +72,18 @@ function work {
   dir=$WORKDIR
   for arg in "$@"
   do
-    dir=$dir/$arg
+    dir=${dir}/${arg}
   done
 
-  if [ -d $dir ]; then
-    pushd $dir
+  if [ -d "${dir}" ]; then
+    pushd "${dir}" || return
   fi
 }
 
 function mm {
   deep="${#DIRSTACK[@]}"
-  if [ "$deep" -gt 1 ]; then
-    popd
+  if [ "${deep}" -gt 1 ]; then
+    popd || return
   fi
 }
 
@@ -102,11 +91,11 @@ function cert {
   dir=$CERTDIR
   for arg in "$@"
   do
-    dir=$dir/$arg
+    dir=${dir}/${arg}
   done
 
-  if [ -d $dir ]; then
-    pushd $dir
+  if [ -d "${dir}" ]; then
+    pushd "${dir}" || return
   fi
 }
 
@@ -114,12 +103,26 @@ function cxap {
   dir=$CXAPDIR
   for arg in "$@"
   do
-    dir=$dir/$arg
+    dir="${dir}/${arg}"
   done
 
-  if [ -d $dir ]; then
-    pushd $dir
+  if [ -d "${dir}" ]; then
+    pushd "${dir}" || return
   fi
+}
+
+function _cxap_completer {
+  dir=$CXAPDIR
+  for name in "${COMP_WORDS[@]:1}"
+  do
+    if [ -d "$dir/$name" ]; then
+      dir="$dir/$name"
+    fi
+  done
+
+  COMPREPLY=( $(compgen -W "$(ls "$dir")" -- "${COMP_WORDS[$COMP_CWORD]}") )
+
+  return 0
 }
 
 function windo {
@@ -156,7 +159,7 @@ function gitadd {
         *)
         clang-format -i -style=file "${argArray[$cur]}"
         ;;
-      esac  
+      esac
     else
       echo "No formatter specified: ${argArray[$cur]}"
     fi
@@ -182,15 +185,15 @@ RED_TEXT="\033[31m"    # Red
 GREEN_TEXT="\033[32m"  # Green
 
 function white {
-  printf "${NORMAL}" 
+  printf '%s' "${NORMAL}"
 }
 
 function red {
-  printf "${RED_TEXT}" 
+  printf '%s' "${RED_TEXT}"
 }
 
 function green {
-  printf "${GREEN_TEXT}" 
+  printf '%s' "${GREEN_TEXT}"
 }
 
 
@@ -198,23 +201,23 @@ function windir {
   bs=$1
   if [[ $1 == '.' ]]; then
     bs=$(pwd)
-  fi  
+  fi
 
   if [[ $1 == '~' ]]; then
     echo 'C:\Users\Andrew Pressel'
     return
-  fi  
+  fi
 
   if [[ $bs != /mnt/* ]]; then
     echo not a windows directory
     return
-  fi   
+  fi
 
   bs="${bs//\/mnt\/d\//D:\\}"
   bs="${bs//\/mnt\/c\//C:\\}"
 
   bs="${bs//\//\\}"
-  echo "$bs"  
+  echo "$bs"
 }
 
 function s3touch () {
@@ -233,5 +236,24 @@ function s3touch () {
   aws s3 cp "${fileUri}" "${fileUri}" --metadata '{"x-amz-metadata-directive":"REPLACE"}'
 }
 
+function myip () {
+  ipaddr=$(grep host.docker.internal /etc/hosts | awk '{ print $1}')
 
+  if [[ -z ${ipaddr} ]]; then
+    for interface in 'eth2' 'eth1' 'eth0' 'wifi0'
+    do
+       echo ${interface}
+       ipaddr=$(ifconfig ${interface} | grep 'inet ' | awk '{print $2}')
+     if [[ -n ${ipaddr} ]]; then
+         break
+       fi
+    done
+  fi
 
+  if [[ -z ${ipaddr} ]]; then
+    message_alert "Unable to determine local ipaddr"
+    exit 1
+  fi
+
+  echo "${ipaddr}"
+}

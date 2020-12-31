@@ -15,6 +15,7 @@ alias vir='vim -R'
 
 #====[ search ]=============================================
 alias findinfiles="find . -type f -not -path \"*/.git/*\" 2> /dev/null | xargs -d '\n' grep"
+alias fif="find . -type f -not -path \"*/.git/*\" 2> /dev/null | xargs -d '\n' grep"
 
 #====[ miscellaneous ]======================================
 alias junk='vi /tmp/junk.amp'
@@ -24,7 +25,6 @@ alias r='fc -s '
 alias diff='colordiff'
 alias cpptidy='clang-format -i'
 alias cprofile='valgrind --tool=callgrind'
-alias myip="ifconfig wifi0 | grep 'inet ' | awk '{print \$2}'"
 
 #====[ GIT ]================================================
 alias git.junk='git ls-files --others --exclude-standard'
