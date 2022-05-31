@@ -1,4 +1,6 @@
 SOURCE_FILES=$(patsubst src/%,%,$(wildcard src/.[a-zA-Z]*))
+SOURCE_FILES+=$(patsubst src/%,%,$(wildcard src/.bash/*))
+SOURCE_FILES+=$(patsubst src/%,%,$(wildcard src/.bash/ftplugin/*))
 SOURCE_FILES+=$(patsubst src/%,%,$(wildcard src/bin/*))
 
 INCLUDE=--include='bin' $(addprefix --include=, $(SOURCE_FILES))
@@ -24,5 +26,5 @@ install :
 
 aptinstall : 
 	sudo apt update -y
-	while read pkg; do sudo apt install -y "$$pkg"; done < aptdepends
+	while read pkg; do sudo apt install -y "$$pkg"; done < ${HOME}/.aptdepends
 	sudo apt update -y

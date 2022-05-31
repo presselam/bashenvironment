@@ -1,4 +1,5 @@
 bindechexascii
+checkstyle
 clang-format
 clang-tidy
 cmake
@@ -11,6 +12,7 @@ jq
 libdbd-mysql-perl
 libdbi-perl
 libfile-slurp-perl
+libhash-diff-perl
 libjson-perl
 libmail-sendmail-perl
 libperl6-slurp-perl

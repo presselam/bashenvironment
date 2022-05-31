@@ -10,21 +10,22 @@ alias ll='ls -lrt'
 alias la='ls -A'
 alias lisa='ls -lisart'
 
-#====[ vim ]================================================
+#====[ editors ]============================================
 alias vir='vim -R'
+alias idea='idea64.exe . &'
 
 #====[ search ]=============================================
-alias findinfiles="find . -type f -not -path \"*/.git/*\" 2> /dev/null | xargs -d '\n' grep"
+alias fif="find . -type f -not -path \"*/.git/*\" 2> /dev/null | xargs -d '\n' grep"
+alias ff="find . -type f -not -path \"*/.git/*\" -name "
+alias fd="find . -type d -not -path \"*/.git/*\" -name "
 
 #====[ miscellaneous ]======================================
+alias bok='vi ${HOME}/.bok'
 alias junk='vi /tmp/junk.amp'
 alias mine='ps -eaf | grep $USER'
-#alias h='history | grep'
-alias r='fc -s '
 alias diff='colordiff'
 alias cpptidy='clang-format -i'
 alias cprofile='valgrind --tool=callgrind'
-alias myip="ifconfig wifi0 | grep 'inet ' | awk '{print \$2}'"
 
 #====[ GIT ]================================================
 alias git.junk='git ls-files --others --exclude-standard'
@@ -37,17 +38,15 @@ alias d2h='bindechexascii --d2h'
 alias h2b='bindechexascii --h2b'
 alias h2d='bindechexascii --h2d'
 
-#====[ WSL ]================================================
-alias powershell='cmd.exe /c start powershell'
-alias st='cmd.exe /c "C:\Users\Andrew Pressel\AppData\Local\SourceTree\SourceTree.exe"'
-alias snip='windo SnippingTool.exe &'
-alias dbeaver='windo "C:\Program Files\DBeaver\dbeaver.exe" -nl en'
-alias pm='windo "C:\Users\Andrew Pressel\AppData\Local\Postman\Update.exe" --processStart "Postman.exe"'
-
 #====[ docker ]=============================================
 alias dstop='docker stop $(docker ps -q)'
 alias dnostart='docker update --restart=no $(docker ps --all -q)'
 alias dclean='docker rmi -f $(docker images -f "dangling=true" -q)'
 alias dlogin='ln -s ~/.docker/config.json.keep ~/.docker/config.json'
 alias dlogout='rm -f ~/.docker/config.json'
+
+alias kube='kubectl'
+source <(kubectl completion bash)
+complete -F __start_kubectl kube
+source /opt/istio-1.13.2/tools/istioctl.bash
 
