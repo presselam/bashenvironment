@@ -1,4 +1,6 @@
 SOURCE_FILES=$(patsubst src/%,%,$(wildcard src/.[a-zA-Z]*))
+SOURCE_FILES+=$(patsubst src/%,%,$(wildcard src/.bash/*))
+SOURCE_FILES+=$(patsubst src/%,%,$(wildcard src/.bash/ftplugin/*))
 SOURCE_FILES+=$(patsubst src/%,%,$(wildcard src/bin/*))
 
 INCLUDE=--include='bin' $(addprefix --include=, $(SOURCE_FILES))

@@ -2,6 +2,7 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
+
 if [[ -z ${WORKSPACE_DIR} ]]; then
   echo "WORKSPACE_DIR must be configured; not continuing"
   return
@@ -30,7 +31,7 @@ shopt -s checkwinsize
 
 # set vi editing mode on the commandline
 set -o vi
-export EDITOR=vi
+export EDITOR='/usr/bin/nvim'
 
 # set pipes to cascade fail 
 set -o pipefail
@@ -62,7 +63,7 @@ fi
 
 if [ "$color_prompt" = yes ]; then
 #    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
- PS1="\[\033[38;5;226m\]\u\[$(tput sgr0)\]\[\033[38;5;6m\][\[$(tput bold)\]\[$(tput sgr0)\]\[\033[38;5;15m\]\W\[$(tput sgr0)\]\[$(tput sgr0)\]\[\033[38;5;6m\]]:\[$(tput sgr0)\]\[\033[38;5;15m\] \[$(tput sgr0)\]"
+PS1="\$(term_git_title)\[\033[38;5;226m\]\u\[$(tput sgr0)\]\[\033[38;5;6m\][\[$(tput bold)\]\[$(tput sgr0)\]\[\033[38;5;15m\]\W\[$(tput sgr0)\]\[$(tput sgr0)\]\[\033[38;5;6m\]]:\[$(tput sgr0)\]\[\033[38;5;15m\] \[$(tput sgr0)\]"
 else
     PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 fi
@@ -93,19 +94,6 @@ if [ -x /usr/bin/dircolors ]; then
     alias egrep='egrep --color=auto'
 fi
 
-# colored GCC warnings and errors
-#export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
-
-
-# Alias definitions.
-# You may want to put all your additions into a separate file like
-# ~/.bash_aliases, instead of adding them here directly.
-# See /usr/share/doc/bash-doc/examples in the bash-doc package.
-
-if [ -f ~/.bash_aliases ]; then
-    . ~/.bash_aliases
-fi
-
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
@@ -117,28 +105,37 @@ if ! shopt -oq posix; then
   fi
 fi
 
+# Alias definitions.
+# You may want to put all your additions into a separate file like
+# ~/.bash/aliases_bash, instead of adding them here directly.
+# See /usr/share/doc/bash-doc/examples in the bash-doc package.
+if [ -f "${HOME}/.bash/aliases.bash" ]; then
+    . "${HOME}/.bash/aliases.bash"
+fi
+
 #====[ custom functions ]===================================
-if [ -f ~/.bash_functions ]; then
-    . ~/.bash_functions
+if [ -f "${HOME}/.bash/functions.bash" ]; then
+    . "${HOME}/.bash/functions.bash"
 fi
 
-#====[ proprietary ]========================================
-if [ -f ~/.bash_proprietary ]; then
-    . ~/.bash_proprietary
-fi
+#====[ type plugins ]=======================================
+plugins=('ftplugin' 'projects')
+for plug_dir in "${plugins[@]}"
+do
+  if [[ -d "${HOME}/.bash/${plug_dir}" ]]; then
+    mapfile -t projects < <(find "${HOME}/.bash/${plug_dir}" -type f -name '*.bash');
+    for file in "${projects[@]}"
+    do
+      # echo "loading [${file}]"
+      . "${file}"
+    done
+  fi
+done
 
+#====[ X11 ]================================================
+hostname=$(awk '/nameserver / {print $2; exit}' /etc/resolv.conf 2>/dev/null)
+export DISPLAY="${hostname}:0"
 
-export C_INCLUDE_PATH="${HOME}/include"
-export CPLUS_INCLUDE_PATH="${HOME}/include"
-export LIBRARY_PATH="${HOME}/lib"
-
-#====[ perl thingies ]======================================
-export PERL5LIB=$HOME/lib
-
-#====[ docker thingies ]====================================
-export DOCKER_HOST=tcp://localhost:2375
-export DISPLAY=:0
 
 # set PATH so it includes user's private bin directories
 PATH=".:$HOME/bin:$HOME/.local/bin:$PATH"
-

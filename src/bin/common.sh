@@ -19,3 +19,26 @@ function message_alert {
   echo "====> " "$(date)"
   printf "${GREEN_TEXT}  %s${NORMAL}\n" "$@"
 }
+
+#function myip () {
+# ipaddr=$(hostname -I | awk -F' ' '{print $1}')
+#  ipaddr=$(grep host.docker.internal /etc/hosts | awk '{ print $1}')
+#
+#  if [[ -z ${ipaddr} ]]; then
+#    for interface in 'eth2' 'eth1' 'eth0' 'wifi0'
+#    do
+#      echo ${interface}
+#      ipaddr=$(ifconfig ${interface} | grep 'inet ' | awk '{print $2}')
+#      if [[ -n ${ipaddr} ]]; then
+#        break
+#      fi
+#    done
+#  fi
+#
+#  if [[ -z ${ipaddr} ]]; then
+#    message_alert "Unable to determine local ipaddr"
+#    exit 1
+#  fi
+#
+#  echo "${ipaddr}"
+#}

@@ -1,3 +1,4 @@
+source "${HOME}/bin/common.sh"
 
 basedir="${WORKSPACE_DIR}"
 WORKDIR="${basedir}/projects"
@@ -35,7 +36,9 @@ function _exp_completer {
     fi
   done
 
-  COMPREPLY=( $(compgen -W "$(ls "$dir")" -- "${COMP_WORDS[$COMP_CWORD]}") )
+  mapfile -t dirs < <(find "${dir}" -maxdepth 1 -type d)
+  mapfile -t dirs < <(for f in "${dirs[@]:1}"; do basename "${f}"; done)
+  mapfile -t COMPREPLY < <(compgen -W "${dirs[*]}" -- "${COMP_WORDS[$COMP_CWORD]}")
 
   return 0
 }
@@ -49,7 +52,9 @@ function _work_completer {
     fi
   done
 
-  COMPREPLY=( $(compgen -W "$(ls "$dir")" -- "${COMP_WORDS[$COMP_CWORD]}") )
+  mapfile -t dirs < <(find "${dir}" -maxdepth 1 -type d)
+  mapfile -t dirs < <(for f in "${dirs[@]:1}"; do basename "${f}"; done)
+  mapfile -t COMPREPLY < <(compgen -W "${dirs[*]}" -- "${COMP_WORDS[$COMP_CWORD]}")
 
   return 0
 }
@@ -63,7 +68,9 @@ function _cert_completer {
     fi
   done
 
-  COMPREPLY=( $(compgen -W "$(ls "$dir")" -- "${COMP_WORDS[$COMP_CWORD]}") )
+  mapfile -t dirs < <(find "${dir}" -maxdepth 1 -type d)
+  mapfile -t dirs < <(for f in "${dirs[@]:1}"; do basename "${f}"; done)
+  mapfile -t COMPREPLY < <(compgen -W "${dirs[*]}" -- "${COMP_WORDS[$COMP_CWORD]}")
 
   return 0
 }
@@ -120,7 +127,9 @@ function _cxap_completer {
     fi
   done
 
-  COMPREPLY=( $(compgen -W "$(ls "$dir")" -- "${COMP_WORDS[$COMP_CWORD]}") )
+  mapfile -t dirs < <(find "${dir}" -maxdepth 1 -type d)
+  mapfile -t dirs < <(for f in "${dirs[@]:1}"; do basename "${f}"; done)
+  mapfile -t COMPREPLY < <(compgen -W "${dirs[*]}" -- "${COMP_WORDS[$COMP_CWORD]}")
 
   return 0
 }
@@ -236,24 +245,9 @@ function s3touch () {
   aws s3 cp "${fileUri}" "${fileUri}" --metadata '{"x-amz-metadata-directive":"REPLACE"}'
 }
 
-function myip () {
-  ipaddr=$(grep host.docker.internal /etc/hosts | awk '{ print $1}')
-
-  if [[ -z ${ipaddr} ]]; then
-    for interface in 'eth2' 'eth1' 'eth0' 'wifi0'
-    do
-       echo ${interface}
-       ipaddr=$(ifconfig ${interface} | grep 'inet ' | awk '{print $2}')
-     if [[ -n ${ipaddr} ]]; then
-         break
-       fi
-    done
-  fi
-
-  if [[ -z ${ipaddr} ]]; then
-    message_alert "Unable to determine local ipaddr"
-    exit 1
-  fi
-
-  echo "${ipaddr}"
+function r () {
+  for cmd in "$@"
+  do
+    fc -s "${cmd}"
+  done
 }
