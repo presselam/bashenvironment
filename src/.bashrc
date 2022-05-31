@@ -2,6 +2,7 @@
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
+
 if [[ -z ${WORKSPACE_DIR} ]]; then
   echo "WORKSPACE_DIR must be configured; not continuing"
   return
@@ -30,7 +31,10 @@ shopt -s checkwinsize
 
 # set vi editing mode on the commandline
 set -o vi
-export EDITOR=vi
+export EDITOR='/usr/bin/nvim'
+
+# set pipes to cascade fail 
+set -o pipefail
 
 # If set, the pattern "**" used in a pathname expansion context will
 # match all files and zero or more directories and subdirectories.
@@ -49,26 +53,17 @@ case "$TERM" in
     xterm-color|*-256color) color_prompt=yes;;
 esac
 
-
-# uncomment for a colored prompt, if the terminal has the capability; turned
-# off by default to not distract the user: the focus in a terminal window
-# should be on the output of commands, not on the prompt
-#force_color_prompt=yes
-
-if [ -n "$force_color_prompt" ]; then
-    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+color_prompt='no'
+if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
 	# We have color support; assume it's compliant with Ecma-48
 	# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
 	# a case would tend to support setf rather than setaf.)
-	color_prompt=yes
-    else
-	color_prompt=
-    fi
+	color_prompt='yes'
 fi
 
 if [ "$color_prompt" = yes ]; then
 #    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
- PS1="\[\033[38;5;226m\]\u\[$(tput sgr0)\]\[\033[38;5;6m\][\[$(tput bold)\]\[$(tput sgr0)\]\[\033[38;5;15m\]\W\[$(tput sgr0)\]\[$(tput sgr0)\]\[\033[38;5;6m\]]:\[$(tput sgr0)\]\[\033[38;5;15m\] \[$(tput sgr0)\]"
+PS1="\$(term_git_title)\[\033[38;5;226m\]\u\[$(tput sgr0)\]\[\033[38;5;6m\][\[$(tput bold)\]\[$(tput sgr0)\]\[\033[38;5;15m\]\W\[$(tput sgr0)\]\[$(tput sgr0)\]\[\033[38;5;6m\]]:\[$(tput sgr0)\]\[\033[38;5;15m\] \[$(tput sgr0)\]"
 else
     PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 fi
@@ -85,7 +80,11 @@ esac
 
 # enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
-    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    if [[ -r ~/.dircolors ]]; then
+      eval "$(dircolors -b ~/.dircolors)"
+    else
+      eval "$(dircolors -b)"
+    fi
     alias ls='ls --color=auto'
     #alias dir='dir --color=auto'
     #alias vdir='vdir --color=auto'
@@ -93,19 +92,6 @@ if [ -x /usr/bin/dircolors ]; then
     alias grep='grep --color=auto'
     alias fgrep='fgrep --color=auto'
     alias egrep='egrep --color=auto'
-fi
-
-# colored GCC warnings and errors
-#export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
-
-
-# Alias definitions.
-# You may want to put all your additions into a separate file like
-# ~/.bash_aliases, instead of adding them here directly.
-# See /usr/share/doc/bash-doc/examples in the bash-doc package.
-
-if [ -f ~/.bash_aliases ]; then
-    . ~/.bash_aliases
 fi
 
 # enable programmable completion features (you don't need to enable
@@ -119,23 +105,37 @@ if ! shopt -oq posix; then
   fi
 fi
 
+# Alias definitions.
+# You may want to put all your additions into a separate file like
+# ~/.bash/aliases_bash, instead of adding them here directly.
+# See /usr/share/doc/bash-doc/examples in the bash-doc package.
+if [ -f "${HOME}/.bash/aliases.bash" ]; then
+    . "${HOME}/.bash/aliases.bash"
+fi
+
 #====[ custom functions ]===================================
-if [ -f ~/.bash_functions ]; then
-    . ~/.bash_functions
+if [ -f "${HOME}/.bash/functions.bash" ]; then
+    . "${HOME}/.bash/functions.bash"
 fi
 
-#====[ proprietary ]========================================
-if [ -f ~/.bash_proprietary ]; then
-    . ~/.bash_proprietary
-fi
+#====[ type plugins ]=======================================
+plugins=('ftplugin' 'projects')
+for plug_dir in "${plugins[@]}"
+do
+  if [[ -d "${HOME}/.bash/${plug_dir}" ]]; then
+    mapfile -t projects < <(find "${HOME}/.bash/${plug_dir}" -type f -name '*.bash');
+    for file in "${projects[@]}"
+    do
+      # echo "loading [${file}]"
+      . "${file}"
+    done
+  fi
+done
 
-#====[ perl thingies ]======================================
-export PERL5LIB=$HOME/lib
+#====[ X11 ]================================================
+hostname=$(awk '/nameserver / {print $2; exit}' /etc/resolv.conf 2>/dev/null)
+export DISPLAY="${hostname}:0"
 
-#====[ docker thingies ]====================================
-export DOCKER_HOST=tcp://localhost:2375
-export DISPLAY=:0
 
 # set PATH so it includes user's private bin directories
 PATH=".:$HOME/bin:$HOME/.local/bin:$PATH"
-
