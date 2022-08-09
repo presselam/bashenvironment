@@ -87,12 +87,14 @@ function work {
   fi
 }
 
+
 function mm {
   deep="${#DIRSTACK[@]}"
   if [ "${deep}" -gt 1 ]; then
     popd || return
   fi
 }
+
 
 function cert {
   dir=$CERTDIR
@@ -135,48 +137,28 @@ function _cxap_completer {
 }
 
 function windo {
-  bs="${1//\//\\}"
+  bs="$1" 
+  if [[ -f "${bs}" ]]; then
+    bs='\\wsl$\Ubuntu'$(readlink -f "${bs}")
+  fi
+
+  bs="${bs//\//\\}"
   echo "Running: $bs"
   cmd.exe /c "$bs" "${@:2}"
 }
 
 function explore {
-  bs="${1//\//\\}"
+  bs="$1"
 
   if [[ -z $bs ]]; then
-    bs='.'
+    bs=$(readlink -f .)
   fi
 
-  windo explorer "$bs"
+  windo explorer '\\wsl$\Ubuntu'"${bs//\//\\}"
 }
 
 calc(){ awk "BEGIN{ print $* }" ;}
 
-
-# format with clang-format before adding to git
-validFiletypes="c|h|cpp|hpp|js|pl|pm"
-function gitadd {
-  cur=0
-  argArray=( "$@" )
-  while [[ $cur -lt $# ]]; do
-    if [[ ${argArray[$cur]} =~ \.($validFiletypes)$ ]]; then
-      filename=${argArray[$cur]}
-      case ${filename##*.} in
-        p[lm])
-          perltidy -b -nst "$filename"
-          ;;
-        *)
-        clang-format -i -style=file "${argArray[$cur]}"
-        ;;
-      esac
-    else
-      echo "No formatter specified: ${argArray[$cur]}"
-    fi
-
-    git add -v "${argArray[$cur]}"
-    cur=$((cur + 1))
-  done
-}
 
 function h {
   results=$(history)
@@ -250,4 +232,31 @@ function r () {
   do
     fc -s "${cmd}"
   done
+}
+
+function _work_init () {
+  local -n _work_init_setup=$1
+  mapfile -t sorted < <(echo "${!_work_init_setup[@]}" | tr ' ' '\n' | sort)
+
+  width=1
+  for param in "${sorted[@]}"; do
+     wide=${#param}
+     if [[ ${width} -lt ${wide} ]];then
+       width=${wide}
+     fi
+  done
+
+  for param in "${sorted[@]}"; do
+    printf "%-9s: %-${width}s => %s\n" 'Adding' "${param}" "${_work_init_setup[$param]}"
+    export "${param}"="${_work_init_setup[$param]}"
+  done
+}
+
+function _work_config () {
+  confScript=$1
+  if [[ -z "${confScript}" ]]; then
+    confScript="$HOME/bin/$WORKPRE.conf.sh"
+  fi
+
+  $EDITOR "${confScript}"
 }

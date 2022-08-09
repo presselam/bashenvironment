@@ -3,17 +3,18 @@ export PYTHONPATH="$HOME/lib/python"
 
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$("${HOME}/anaconda3/bin/conda" 'shell.bash' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-  eval "$__conda_setup"
-else
-  if [ -f "${HOME}/anaconda3/etc/profile.d/conda.sh" ]; then
-     . "${HOME}/anaconda3/etc/profile.d/conda.sh"
-  else
-     export PATH="${HOME}/anaconda3/bin:$PATH"
-  fi
-fi
-unset __conda_setup
+#__conda_setup="$("${HOME}/anaconda3/bin/conda" 'shell.bash' 'hook' 2> /dev/null)"
+#rc=$?
+#if [ "${rc}" -eq 0 ]; then
+#  eval "$__conda_setup"
+#else
+#  if [ -f "${HOME}/anaconda3/etc/profile.d/conda.sh" ]; then
+#     . "${HOME}/anaconda3/etc/profile.d/conda.sh"
+#  else
+#     export PATH="${HOME}/anaconda3/bin:$PATH"
+#  fi
+#fi
+#unset __conda_setup
 # <<< conda initialize <<<
 
 # python virtual environment. my powerline shows it
@@ -21,8 +22,16 @@ export VIRTUAL_ENV_DISABLE_PROMPT=1
 
 #====[ PYTHON FUNCTIONS ]===================================
 function pyactivate () {
+
+  if [[ -f Pipfile ]]; then
+    pe=$(pipenv --venv)
+    if [[ -n "$pe" ]];then
+      pipenv shell
+      return
+    fi
+  fi
   
-  mapfile -t venv  < <(find . -type d -name '*venv')
+  mapfile -t venv  < <(find . -maxdepth 3 -type d -name '*venv')
 
   if [[ ${#venv[@]} -lt 1 ]]; then
     message_error 'Unable to find virtual environment'
@@ -40,19 +49,31 @@ alias pya=pyactivate
 alias pyd=deactivate
 
 function pyvenv () {
-  if [[ $# != 1 ]]; then
-    message_error 'Must specify a name'
+
+  if [[ -f Pipfile ]]; then
+    pe=$(pipenv --venv 2> /dev/null)
+    if [[ -n "$pe" ]];then
+      message "$(basename "${pe}")  already exists"
+      return
+    fi
+
+    message 'Found Pipfile; using pipenv'
+    pipenv install --dev
     return
-  fi
-
-  name="$1-venv"
-
-  if [[ -d "${name}" ]];then
-    message_alert "${name} already exists"
   else
-    python3 -m venv "${name}"
+    name='.venv'
+    if [[ $# == 1 ]]; then
+      name=".$1-venv"
+    fi
+
+    if [[ -d "${name}" ]];then
+      message_alert "${name} already exists"
+    else
+      python3 -m venv "${name}"
+    fi
   fi
 
   pyactivate
 }
 alias pyv=pyvenv
+
