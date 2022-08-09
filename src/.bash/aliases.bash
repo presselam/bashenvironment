@@ -38,12 +38,6 @@ alias d2h='bindechexascii --d2h'
 alias h2b='bindechexascii --h2b'
 alias h2d='bindechexascii --h2d'
 
-#====[ docker ]=============================================
-alias dstop='docker stop $(docker ps -q)'
-alias dnostart='docker update --restart=no $(docker ps --all -q)'
-alias dclean='docker rmi -f $(docker images -f "dangling=true" -q)'
-alias dlogin='ln -s ~/.docker/config.json.keep ~/.docker/config.json'
-alias dlogout='rm -f ~/.docker/config.json'
 
 alias kube='kubectl'
 source <(kubectl completion bash)
