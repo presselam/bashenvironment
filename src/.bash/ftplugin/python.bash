@@ -25,8 +25,8 @@ function pyactivate () {
 
   if [[ -f Pipfile ]]; then
     pe=$(pipenv --venv)
-    if [[ -n "$pe" ]];then
-      pipenv shell
+    if [[ -n "${pe}" ]];then
+      source "${pe}/bin/activate"
       return
     fi
   fi
@@ -76,4 +76,22 @@ function pyvenv () {
   pyactivate
 }
 alias pyv=pyvenv
+alias pylib='pushd $VIRTUAL_ENV/lib/*/site-packages/'
 
+function pyrm () {
+
+  if [[ -z $VIRTUAL_ENV ]]; then
+    message_alert 'Not in a virtual environment'
+    return
+  fi
+
+  dir=$VIRTUAL_ENV
+  deactivate
+
+  if [[ -n $PIPENV_ACTIVE ]]; then
+    pipenv --rm
+  else
+    rm -rf "${dir}"
+  fi
+}
+alias pyr=pyrm

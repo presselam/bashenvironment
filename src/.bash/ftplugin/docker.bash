@@ -8,7 +8,7 @@ alias dlogin='ln -s ~/.docker/config.json.keep ~/.docker/config.json'
 alias dlogout='rm -f ~/.docker/config.json'
 
 function dbuild {
-  args=$(getopt -o pns:v:c:r: --long plain,nocache,service:,version:,context:,registry: -n dbuild -a -- "$@")
+  args=$(getopt -o pns:v:c:r: --long plain,nocache,service:,version:,context:,registry:,verbose -n dbuild -a -- "$@")
   valid=$?
   if [[ "${valid}" != "0" ]]; then
     return 1
@@ -20,7 +20,8 @@ function dbuild {
   context='.'
   progress='auto'
   dfile="$(pwd)/Dockerfile"
-  cache=
+  cache=""
+  verbose=0
 
   if [[ -f VERSION.txt ]]; then
     version=$(cat VERSION.txt)
@@ -31,31 +32,44 @@ function dbuild {
   do
     case "$1" in
       -p | --plain)    progress='plain';   shift   ;;
-      -n | --nocache)  cache='--no-cache'; shift   ;;
+      -n | --nocache)  cache='yes';        shift   ;;
       -s | --service)  service="$2";       shift 2 ;;
       -v | --version)  version="$2";       shift 2 ;;
       -c | --context)  context="$2";       shift 2 ;;
       -r | --registry) registry="$2";      shift 2 ;;
+      --verbose)       verbose=1;          shift   ;;
       --) shift; break;;
     esac
   done
 
   image="${registry}/${service}:${version}-PRESSEL"
 
-  # shellcheck disable=SC2086
-  # workdbuildargs needs to be expanded
-  docker build ${WORKDBUILDARGS} ${cache} --progress "${progress}" --tag "${image}" --file "${dfile}" "${context}"
+  cmd=(docker build)
+  cmd+=(${WORKDBUILDARGS})
+  cmd+=(${cache:+--no-cache})
+  cmd+=(--progress "${progress}")
+  cmd+=(--tag "${image}")
+  cmd+=(--file "${dfile}")
+  cmd+=("${context}")
+
+  if [[ ${verbose} == 1 ]]; then
+    msg=$(printf '%s ' "${cmd[@]}")
+    message "${msg}"
+  fi
+
+  "${cmd[@]}"
 
   message_alert "Built image: ${image}"
 }
 
 function drun {
-  args=$(getopt -o s:v:r: --long service:,version:,registry: -n drun -a -- "$@")
+  args=$(getopt -o s:v:r:u: --long service:,version:,registry:,user: -n drun -a -- "$@")
   valid=$?
   if [[ "${valid}" != "0" ]]; then
     return 1
   fi
 
+  local user
   registry='local-registry'
   service=$(basename "$(pwd)")
   version='0.0.0'
@@ -71,12 +85,17 @@ function drun {
       -s | --service)  service="$2";  shift 2 ;;
       -v | --version)  version="$2";  shift 2 ;;
       -r | --registry) registry="$2"; shift 2 ;;
+      -u | --user)     user="$2"; shift 2 ;;
       --) shift; break;;
     esac
   done
 
+  if [[ -n "${user}" ]]; then
+    user=('--user' "${user}")
+  fi
+
   image="${registry}/${service}:${version}-PRESSEL"
   message_alert "$@"
-  docker run -it "${image}" "$@"
+  docker run -it "${user[@]}" "${image}" "$@"
 }
 
