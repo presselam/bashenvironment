@@ -9,7 +9,7 @@ function gadd {
       filename=${argArray[$cur]}
       case ${filename##*.} in
         p[lm]) perltidy -b -nst "$filename" ;;
-        py)    autopep8 -a -i "${filename}" ;;
+        py)    black "${filename}" ;;
         *)     clang-format -i -style=file "${argArray[$cur]}" ;;
       esac
     else

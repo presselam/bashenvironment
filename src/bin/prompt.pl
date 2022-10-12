@@ -30,9 +30,9 @@ sub main {
 
   my @conf = (
     (defined($venv) ? 
-      [ 19,  46, 'l',sub { (($mask & 0x10) ? $venv || $ENV{USER} || getpwuid($<) : '') . " $shlvl" } ]
+      [ 19,  46, 'l',sub { (($mask & 0x10) ? $venv || $ENV{WORKPRE} || getpwuid($<) : '') . " $shlvl" } ]
       :
-      [ 91,  234, 'l',sub { (($mask & 0x10) ? $ENV{USER} || getpwuid($<) : '') . " $shlvl" } ]
+      [ 91,  234, 'l',sub { (($mask & 0x10) ? $ENV{WORKPRE} || getpwuid($<) : '') . " $shlvl" } ]
     ),
     [ 255, 235, 'l',sub { ($mask & 0x08) ? basename( $ENV{PWD} ) : '' } ],
     [ 255, 237, 'l',sub { ($mask & 0x04) ? gitBranch() : ''} ],
