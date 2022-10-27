@@ -80,18 +80,26 @@ alias pylib='pushd $VIRTUAL_ENV/lib/*/site-packages/'
 
 function pyrm () {
 
-  if [[ -z $VIRTUAL_ENV ]]; then
-    message_alert 'Not in a virtual environment'
+  local dir
+  if [[ -n $VIRTUAL_ENV ]]; then
+    dir=$VIRTUAL_ENV
+    deactivate
+    rm -rf "${dir}"
     return
   fi
 
-  dir=$VIRTUAL_ENV
-  deactivate
-
-  if [[ -n $PIPENV_ACTIVE ]]; then
+  if [[ -f Pipfile ]]; then
     pipenv --rm
-  else
-    rm -rf "${dir}"
+    return
   fi
+
+  mapfile -t venv  < <(find . -maxdepth 3 -type d -name '*venv')
+
+  if [[ ${#venv[@]} -lt 1 ]]; then
+    message_error 'Unable to find virtual environment'
+    return
+  fi
+
+  rm -rf "${venv[0]}"
 }
 alias pyr=pyrm

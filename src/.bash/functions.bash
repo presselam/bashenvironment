@@ -233,30 +233,3 @@ function r () {
     fc -s "${cmd}"
   done
 }
-
-function _work_init () {
-  local -n _work_init_setup=$1
-  mapfile -t sorted < <(echo "${!_work_init_setup[@]}" | tr ' ' '\n' | sort)
-
-  width=1
-  for param in "${sorted[@]}"; do
-     wide=${#param}
-     if [[ ${width} -lt ${wide} ]];then
-       width=${wide}
-     fi
-  done
-
-  for param in "${sorted[@]}"; do
-    printf "%-9s: %-${width}s => %s\n" 'Adding' "${param}" "${_work_init_setup[$param]}"
-    export "${param}"="${_work_init_setup[$param]}"
-  done
-}
-
-function _work_config () {
-  confScript=$1
-  if [[ -z "${confScript}" ]]; then
-    confScript="$HOME/bin/$WORKPRE.conf.sh"
-  fi
-
-  $EDITOR "${confScript}"
-}
