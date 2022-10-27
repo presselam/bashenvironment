@@ -63,7 +63,7 @@ function dbuild {
 }
 
 function drun {
-  args=$(getopt -o s:v:r:u: --long service:,version:,registry:,user: -n drun -a -- "$@")
+  args=$(getopt -o p:s:v:r:u: --long port:,service:,version:,registry:,user: -n drun -a -- "$@")
   valid=$?
   if [[ "${valid}" != "0" ]]; then
     return 1
@@ -73,6 +73,7 @@ function drun {
   registry='local-registry'
   service=$(basename "$(pwd)")
   version='0.0.0'
+  port=
 
   if [[ -f VERSION.txt ]]; then
     version=$(cat VERSION.txt)
@@ -85,7 +86,8 @@ function drun {
       -s | --service)  service="$2";  shift 2 ;;
       -v | --version)  version="$2";  shift 2 ;;
       -r | --registry) registry="$2"; shift 2 ;;
-      -u | --user)     user="$2"; shift 2 ;;
+      -u | --user)     user="$2";     shift 2 ;;
+      -p | --port)     port="$2";     shift 2 ;;
       --) shift; break;;
     esac
   done
@@ -93,9 +95,12 @@ function drun {
   if [[ -n "${user}" ]]; then
     user=('--user' "${user}")
   fi
+  if [[ -n "${port}" ]]; then
+    port=('-p' "${port}")
+  fi
 
   image="${registry}/${service}:${version}-PRESSEL"
   message_alert "$@"
-  docker run -it "${user[@]}" "${image}" "$@"
+  docker run -it "${user[@]}" "${port[@]}" "${image}" "$@"
 }
 
