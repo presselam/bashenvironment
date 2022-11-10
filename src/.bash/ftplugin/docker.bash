@@ -43,6 +43,7 @@ function dbuild {
   done
 
   image="${registry}/${service}:${version}-PRESSEL"
+  image="${image,,}"
 
   cmd=(docker build)
   cmd+=(${WORKDBUILDARGS})
@@ -100,6 +101,8 @@ function drun {
   fi
 
   image="${registry}/${service}:${version}-PRESSEL"
+  image="${image,,}"
+
   message_alert "$@"
   docker run -it "${user[@]}" "${port[@]}" "${image}" "$@"
 }
