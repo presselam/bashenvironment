@@ -15,8 +15,7 @@ function _work_init {
 
   wanted=0
   rcFile="${HOME}/.${pre}projrc"
-  declare -A setup
-  setup['WORKPRE']="$pre"
+  _work_environment 'WORKPRE' "${pre}"
 
   #====[ Read Project Config ]================================
   while IFS="" read -r ln; do
@@ -33,30 +32,18 @@ function _work_init {
     if [[ ${value::1} == "'" ]]; then value=$(echo "${value}" | awk '{print substr($0,2,length($0)-2)}'); fi
 
     # shellcheck disable=SC2034
-    if [[ "${wanted}" == 'init' ]]; then setup[${key}]=${value}; fi
+    if [[ "${wanted}" == 'init' ]]; then _work_environment "${key}" "${value}"; fi
     if [[ "${wanted}" == 'modes' ]]; then _work_modes[${key}]=${value}; fi
-  done <"${rcFile}"
 
-  #====[ Setup Work Environment ]=============================
-  _work_environment setup
+  done <"${rcFile}"
 }
 
 function _work_environment () {
-  local -n _work_init_setup=$1
-  mapfile -t sorted < <(echo "${!_work_init_setup[@]}" | tr ' ' '\n' | sort)
+  local envName=$1
+  local envValu=$2
 
-  width=1
-  for param in "${sorted[@]}"; do
-     wide=${#param}
-     if [[ ${width} -lt ${wide} ]];then
-       width=${wide}
-     fi
-  done
-
-  for param in "${sorted[@]}"; do
-    printf "%-9s: %-${width}s => %s\n" 'Adding' "${param}" "${_work_init_setup[$param]}"
-    export "${param}"="${_work_init_setup[$param]}"
-  done
+  printf "%s: %-10s => %s\n" 'Adding' "${envName}" "${envValu}"
+  export "${envName}"="${envValu}"
 }
 
 function _work_config () {
