@@ -31,9 +31,10 @@ shopt -s checkwinsize
 
 # set vi editing mode on the commandline
 set -o vi
-export EDITOR='/usr/bin/nvim'
+#export EDITOR='/usr/bin/nvim'
+export EDITOR='/usr/local/bin/vim'
 
-# set pipes to cascade fail 
+# set pipes to cascade fail
 set -o pipefail
 
 # If set, the pattern "**" used in a pathname expansion context will
@@ -118,6 +119,9 @@ export DISPLAY="${hostname}:0"
 
 # set PATH so it includes user's private bin directories
 PATH=".:$HOME/bin:$HOME/.local/bin:$PATH"
+
+#====[ SWIFT ]==============================================
+export PATH="$PATH:/usr/share/swift/usr/bin"
 
 
 # Load Angular CLI autocompletion.

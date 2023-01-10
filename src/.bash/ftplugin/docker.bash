@@ -7,49 +7,76 @@ alias dclean='docker rmi -f $(docker images -f "dangling=true" -q)'
 alias dlogin='ln -s ~/.docker/config.json.keep ~/.docker/config.json'
 alias dlogout='rm -f ~/.docker/config.json'
 
-function dbuild {
-  args=$(getopt -o pns:v:c:r: --long plain,nocache,service:,version:,context:,registry:,verbose -n dbuild -a -- "$@")
-  valid=$?
-  if [[ "${valid}" != "0" ]]; then
-    return 1
-  fi
+declare _dImageName
+declare _dService
+declare _dRegistry
+declare _dVersion
+function dimage {
+  args=$(getopt -o s:v:r: --long service:,version:,registry: -n dimage -aq -- "$@")
 
-  registry='local-registry'
-  service=$(basename "$(pwd)")
-  version='0.0.0'
-  context='.'
-  progress='auto'
-  dfile="$(pwd)/Dockerfile"
-  cache=""
-  verbose=0
+  _dRegistry='local-registry'
+  _dService=$(basename "$(pwd)")
+  _dVersion='0.0.0'
 
   if [[ -f VERSION.txt ]]; then
-    version=$(cat VERSION.txt)
+    _dVersion=$(cat VERSION.txt)
   fi
 
   eval set -- "${args}"
   while :
   do
     case "$1" in
-      -p | --plain)    progress='plain';   shift   ;;
-      -n | --nocache)  cache='yes';        shift   ;;
-      -s | --service)  service="$2";       shift 2 ;;
-      -v | --version)  version="$2";       shift 2 ;;
-      -c | --context)  context="$2";       shift 2 ;;
-      -r | --registry) registry="$2";      shift 2 ;;
-      --verbose)       verbose=1;          shift   ;;
+      -s | --service)  _dService="$2";  shift 2 ;;
+      -v | --version)  _dVersion="$2";  shift 2 ;;
+      -r | --registry) _dRegistry="$2"; shift 2 ;;
       --) shift; break;;
     esac
   done
 
-  image="${registry}/${service}:${version}-PRESSEL"
-  image="${image,,}"
+  local postfix
+  if [[ "${_dRegistry}" == 'local-registry' ]]; then
+    postfix='-PRESSEL'
+  fi
 
-  cmd=(docker build)
-  cmd+=(${WORKDBUILDARGS})
+  _dImageName="${_dRegistry}/${_dService}:${_dVersion}${postfix}"
+  _dImageName="${_dImageName,,}"
+
+  caller="${FUNCNAME[1]}"
+  if [[ -z ${caller} ]];then
+    message_alert "Image: ${_dImageName}"
+  fi
+}
+
+
+
+function dbuild {
+  dimage "$@"
+  args=$(getopt -o pnc: --long plain,nocache,context:,verbose -n dbuild -aq -- "$@")
+
+  context='.'
+  progress='auto'
+  dfile="$(pwd)/Dockerfile"
+  cache=""
+  verbose=0
+
+  eval set -- "${args}"
+  while :
+  do
+    case "$1" in
+      -p | --plain)    progress='plain'; shift   ;;
+      -n | --nocache)  cache='yes';      shift   ;;
+      -c | --context)  context="$2";     shift 2 ;;
+      --verbose)       verbose=1;        shift   ;;
+      --) shift; break;;
+    esac
+  done
+
+  mapfile -d ' ' buildArgs < <(echo -n "$WORKDBUILDARGS")
+
+  cmd=(docker build "${buildArgs[@]}")
   cmd+=(${cache:+--no-cache})
   cmd+=(--progress "${progress}")
-  cmd+=(--tag "${image}")
+  cmd+=(--tag "${_dImageName}")
   cmd+=(--file "${dfile}")
   cmd+=("${context}")
 
@@ -60,35 +87,24 @@ function dbuild {
 
   "${cmd[@]}"
 
-  message_alert "Built image: ${image}"
+  message_alert "Built image: ${_dImageName}"
 }
 
 function drun {
-  args=$(getopt -o p:s:v:r:u: --long port:,service:,version:,registry:,user: -n drun -a -- "$@")
-  valid=$?
-  if [[ "${valid}" != "0" ]]; then
-    return 1
-  fi
+  dimage "$@"
+  args=$(getopt -o p:u:m: --long port:,user:,mount: -n drun -aq -- "$@")
 
   local user
-  registry='local-registry'
-  service=$(basename "$(pwd)")
-  version='0.0.0'
-  port=
-
-  if [[ -f VERSION.txt ]]; then
-    version=$(cat VERSION.txt)
-  fi
+  local -a ports
+  local -a mounts
 
   eval set -- "${args}"
   while :
   do
     case "$1" in
-      -s | --service)  service="$2";  shift 2 ;;
-      -v | --version)  version="$2";  shift 2 ;;
-      -r | --registry) registry="$2"; shift 2 ;;
-      -u | --user)     user="$2";     shift 2 ;;
-      -p | --port)     port="$2";     shift 2 ;;
+      -u | --user)     user="$2";         shift 2;;
+      -p | --port)     ports+=(-p "$2");  shift 2;;
+      -m | --mount)    mounts+=(-v "$2"); shift 2;;
       --) shift; break;;
     esac
   done
@@ -96,14 +112,18 @@ function drun {
   if [[ -n "${user}" ]]; then
     user=('--user' "${user}")
   fi
-  if [[ -n "${port}" ]]; then
-    port=('-p' "${port}")
-  fi
 
-  image="${registry}/${service}:${version}-PRESSEL"
-  image="${image,,}"
-
-  message_alert "$@"
-  docker run -it "${user[@]}" "${port[@]}" "${image}" "$@"
+  message_alert "$*"
+  docker run -it "${mounts[@]}" "${user[@]}" "${ports[@]}" "${_dImageName}" "$@"
 }
 
+function dsave {
+  dimage "$@"
+
+    fileName="${_dService,,}.tgz"
+
+    message_alert "Exporting ${_dImageName}"
+    docker save "${_dImageName}" | gzip > "${fileName}"
+
+    ls -lrt "${fileName}"
+}

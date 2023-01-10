@@ -30,7 +30,7 @@ sub main {
 
   my @conf = (
     (defined($venv) ? 
-      [ 19,  46, 'l',sub { (($mask & 0x10) ? $venv || $ENV{WORKPRE} || getpwuid($<) : '') . " $shlvl" } ]
+      [ 19,  34, 'l',sub { (($mask & 0x10) ? $venv || $ENV{WORKPRE} || getpwuid($<) : '') . " $shlvl" } ]
       :
       [ 91,  234, 'l',sub { (($mask & 0x10) ? $ENV{WORKPRE} || getpwuid($<) : '') . " $shlvl" } ]
     ),

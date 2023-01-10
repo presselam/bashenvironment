@@ -1,8 +1,17 @@
 declare -gA _work_modes
+declare -gA _work_vars
 
 function _work_init {
   pre="${FUNCNAME[2]}"
   if [[ -z "${pre}" ]]; then echo 'No project identified'; return; fi
+
+  # remove any existing vars from another project
+  for key in "${!_work_vars[@]}"
+  do
+    eval "unset ${key}"
+    unset _work_vars["${key}"]
+  done
+
 
   message_alert "Setting Workspace to: $pre"
 
@@ -44,6 +53,8 @@ function _work_environment () {
 
   printf "%s: %-10s => %s\n" 'Adding' "${envName}" "${envValu}"
   export "${envName}"="${envValu}"
+
+  _work_vars[${envName}]="${envValu}"
 }
 
 function _work_config () {
