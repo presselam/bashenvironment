@@ -1,5 +1,6 @@
 declare -gA _work_modes
 declare -gA _work_vars
+unset WORKPRE
 
 function _work_init {
   pre="${FUNCNAME[2]}"
@@ -57,6 +58,15 @@ function _work_environment () {
   _work_vars[${envName}]="${envValu}"
 }
 
+function _work_rcFile () {
+  rcFile=$1
+  if [[ -z "${rcFile}" ]]; then
+    rcFile="${HOME}/.${pre}projrc"
+  fi
+
+  $EDITOR "${rcFile}"
+}
+
 function _work_config () {
   confScript=$1
   if [[ -z "${confScript}" ]]; then
@@ -96,6 +106,7 @@ function _work_router {
     ['init']='_work_init'     \
     ['conf']='_work_config'   \
     ['env']='_work_setup_env' \
+    ['rc']='_work_rcFile'     \
   )
 
   for m in "${!_work_modes[@]}"; do
@@ -124,7 +135,6 @@ function _work_router {
   if [[ ${#requested[@]} == 1 ]]; then
     mode=${requested[0]}
     cmd=${modes["${mode}"]}
-#    echo "running:[${cmd}]"
     "${cmd}" "${@:2}"
   else
     message_error "Ambiguous modes: ${requested[*]}"
