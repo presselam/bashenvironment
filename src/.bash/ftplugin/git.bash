@@ -22,13 +22,19 @@ function gadd {
 }
 
 function gcommit {
-  branch=$(git describe --contains --all HEAD)
+  branch=$(git rev-parse --abbrev-ref HEAD)
   if [[ -z "${branch}" ]]; then
     return
   fi
 
   [[ ${branch^^} =~ (^[[:alpha:]]+-[[:digit:]]+) ]]
   ticket="${BASH_REMATCH[1]}"
+
+  if [[ -z "${ticket}" ]]; then
+    echo "Unable to determine ticket";
+    echo "git commit -m \"XXXX-YYYY -- $1\""
+    return
+  fi
 
   git commit -m "${ticket^^} -- $1"
 }

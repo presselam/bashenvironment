@@ -6,13 +6,16 @@ CERTDIR="${basedir}/certification"
 CXAPDIR="${basedir}/cxap"
 EXPERDIR="${basedir}/experiment"
 
+declare _work_cwd
+export _work_cwd
+
 
 complete -F _work_completer work
 complete -F _cert_completer cert
 complete -F _exp_completer  exp
 complete -F _cxap_completer cxap
 
-alias cdw='cd ~1'
+alias cdw="cd \${_work_cwd}"
 
 
 function exp {
@@ -24,6 +27,7 @@ function exp {
 
   if [ -d "${dir}" ]; then
     pushd "${dir}" || return
+    _work_cwd="${dir}"
   fi
 }
 
@@ -84,6 +88,7 @@ function work {
 
   if [ -d "${dir}" ]; then
     pushd "${dir}" || return
+    _work_cwd="${dir}"
   fi
 }
 
@@ -105,6 +110,7 @@ function cert {
 
   if [ -d "${dir}" ]; then
     pushd "${dir}" || return
+    _work_cwd="${dir}"
   fi
 }
 
@@ -117,6 +123,7 @@ function cxap {
 
   if [ -d "${dir}" ]; then
     pushd "${dir}" || return
+    _work_cwd="${dir}"
   fi
 }
 
