@@ -70,4 +70,4 @@ function prompt_user {
 }
 
 #PS1="\[\e]0;\u@\h: \w\a\]\$(prompt_user)\[$(tput sgr0)\]\n "
-PS1="\[\e]0;\u@\h: \w\a\]\$(perl $HOME/bin/prompt.pl)\[$(tput sgr0)\]\n "
+PS1="\[\e]0;\u@\h: \w\a\]\$($HOME/bin/prompt)\[$(tput sgr0)\]\n "

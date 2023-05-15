@@ -11,6 +11,7 @@ declare _dImageName
 declare _dService
 declare _dRegistry
 declare _dVersion
+
 function dimage {
   args=$(getopt -o s:v:r: --long service:,version:,registry: -n dimage -aq -- "$@")
 
@@ -48,16 +49,16 @@ function dimage {
 }
 
 
-
 function dbuild {
   dimage "$@"
-  args=$(getopt -o pnc: --long plain,nocache,context:,verbose -n dbuild -aq -- "$@")
+  args=$(getopt -o pnc:b: --long plain,nocache,context:,verbose,buildarg: -n dbuild -aq -- "$@")
 
   context='.'
   progress='auto'
   dfile="$(pwd)/Dockerfile"
   cache=""
   verbose=0
+  declare -a buildArgs
 
   eval set -- "${args}"
   while :
@@ -66,12 +67,12 @@ function dbuild {
       -p | --plain)    progress='plain'; shift   ;;
       -n | --nocache)  cache='yes';      shift   ;;
       -c | --context)  context="$2";     shift 2 ;;
+      -b | --buildarg) buildArgs+=("--build-arg=$2"); shift 2;;
       --verbose)       verbose=1;        shift   ;;
       --) shift; break;;
+      *) message_error "$1 unknown"; exit;;
     esac
   done
-
-  mapfile -d ' ' buildArgs < <(echo -n "$WORKDBUILDARGS")
 
   cmd=(docker build "${buildArgs[@]}")
   cmd+=(${cache:+--no-cache})
@@ -92,19 +93,21 @@ function dbuild {
 
 function drun {
   dimage "$@"
-  args=$(getopt -o p:u:m: --long port:,user:,mount: -n drun -aq -- "$@")
+  args=$(getopt -o e:p:u:m: --long env:,port:,user:,mount: -n drun -aq -- "$@")
 
   local user
   local -a ports
   local -a mounts
+  local -a envVars
 
   eval set -- "${args}"
   while :
   do
     case "$1" in
-      -u | --user)     user="$2";         shift 2;;
-      -p | --port)     ports+=(-p "$2");  shift 2;;
-      -m | --mount)    mounts+=(-v "$2"); shift 2;;
+      -u | --user)  user="$2";          shift 2;;
+      -p | --port)  ports+=(-p "$2");   shift 2;;
+      -m | --mount) mounts+=(-v "$2");  shift 2;;
+      -e | --env)   envVars+=(-e "$2"); shift 2;;
       --) shift; break;;
     esac
   done
@@ -114,16 +117,24 @@ function drun {
   fi
 
   message_alert "$*"
-  docker run -it "${mounts[@]}" "${user[@]}" "${ports[@]}" "${_dImageName}" "$@"
+  docker run -it "${envVars[@]}" "${mounts[@]}" "${user[@]}" "${ports[@]}" "${_dImageName}" "$@"
 }
 
 function dsave {
-  dimage "$@"
-
+  local imageName
+  local fileName
+  if [[ -z "$1" ]]; then
+    dimage "$@"
+    imageName="${_dImageName}"
     fileName="${_dService,,}.tgz"
+  else
+    imageName="$1"
+    version=${1##*:}
+    fileName="$(basename "${1%%:*}")-${version}.tgz"
+  fi
 
-    message_alert "Exporting ${_dImageName}"
-    docker save "${_dImageName}" | gzip > "${fileName}"
+  message_alert "Exporting ${imageName}"
+  docker save "$imageName" | gzip > "${fileName}"
 
-    ls -lrt "${fileName}"
+  ls -lrt "${fileName}"
 }
