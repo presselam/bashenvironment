@@ -1,31 +1,33 @@
-declare -gA _work_modes
-declare -gA _work_vars
+declare -gA _arbeiter_modes
+declare -gA _arbeiter_vars
 unset WORKPRE
 
-function _work_init {
+function _arbeiter_init () {
   pre="${FUNCNAME[2]}"
   if [[ -z "${pre}" ]]; then echo 'No project identified'; return; fi
 
   # remove any existing vars from another project
-  for key in "${!_work_vars[@]}"
+  for key in "${!_arbeiter_vars[@]}"
   do
     eval "unset ${key}"
-    unset _work_vars["${key}"]
+    unset _arbeiter_vars["${key}"]
   done
 
 
   message_alert "Setting Workspace to: $pre"
 
-  complete -F _proj_completer "${pre}"
+  complete -F _arbeiter_proj_completer "${pre}"
 
   #====[ Remove Custom Modes ]================================
-  for m in "${!_work_modes[@]}"; do
-    unset _work_modes["${m}"]
+  for m in "${!_arbeiter_modes[@]}"; do
+    unset _arbeiter_modes["${m}"]
   done
 
   wanted=0
   rcFile="${HOME}/.${pre}projrc"
-  _work_environment 'WORKPRE' "${pre}"
+
+  local -A initVars
+  initVars['WORKPRE']="${pre}"
 
   #====[ Read Project Config ]================================
   while IFS="" read -r ln; do
@@ -42,23 +44,35 @@ function _work_init {
     if [[ ${value::1} == "'" ]]; then value=$(echo "${value}" | awk '{print substr($0,2,length($0)-2)}'); fi
 
     # shellcheck disable=SC2034
-    if [[ "${wanted}" == 'init' ]]; then _work_environment "${key}" "${value}"; fi
-    if [[ "${wanted}" == 'modes' ]]; then _work_modes[${key}]=${value}; fi
+    if [[ "${wanted}" == 'init' ]]; then initVars["${key}"]="${value}"; fi
+    if [[ "${wanted}" == 'modes' ]]; then _arbeiter_modes[${key}]=${value}; fi
 
   done <"${rcFile}"
+
+  _arbeiter_environment initVars # 2>&1 | cowsay -n -f happy-whale
 }
 
-function _work_environment () {
-  local envName=$1
-  local envValu=$2
+function _arbeiter_environment () {
+  local -n envvars=$1
 
-  printf "%s: %-10s => %s\n" 'Adding' "${envName}" "${envValu}"
-  export "${envName}"="${envValu}"
+  local width=0
+  for var in "${!envvars[@]}"; do
+    if [[ ${width} -lt ${#var} ]]; then
+      width="${#var}"
+    fi
+  done
 
-  _work_vars[${envName}]="${envValu}"
+  format="Adding: %-${width}s => %s\n"
+  for var in "${!envvars[@]}"; do
+    # shellcheck disable=SC2059
+    printf "${format}" "${var}" "${envvars[${var}]}"
+    export "${var}"="${envvars[${var}]}"
+    _arbeiter_vars[${var}]="${envvars[${var}]}"
+  done
+
 }
 
-function _work_rcFile () {
+function _arbeiter_rcFile () {
   rcFile=$1
   if [[ -z "${rcFile}" ]]; then
     rcFile="${HOME}/.${pre}projrc"
@@ -67,16 +81,32 @@ function _work_rcFile () {
   $EDITOR "${rcFile}"
 }
 
-function _work_config () {
+function _arbeiter_config () {
   confScript=$1
   if [[ -z "${confScript}" ]]; then
     confScript="$HOME/bin/$WORKPRE.conf.sh"
   fi
 
-  $EDITOR "${confScript}"
+  cwd=$(pwd)
+  local forSearch
+  local -a buffer
+  mapfile -d ';' -t buffer < <(${confScript} --list)
+  for key in "${buffer[@]}"; do
+    if [[ "${key}" != $'\n' ]]; then
+      if [[ "${cwd}" == *"${key%%=*}" ]];then
+        forSearch="${key#*=}"
+      fi
+    fi
+  done
+
+  if [[ -n "${forSearch}" ]]; then
+    $EDITOR -c "silent! /${forSearch}" "${confScript}"
+  else
+    $EDITOR "${confScript}"
+  fi
 }
 
-function _work_setup_env {
+function _arbeiter_setup_env () {
   confScript=$1
   if [[ -z "${confScript}" ]]; then
     confScript="$HOME/bin/$WORKPRE.conf.sh"
@@ -96,21 +126,21 @@ function _work_setup_env {
   fi
 }
 
-function _work_router {
+function _arbeiter_router () {
 
   pre=${FUNCNAME[1]}
   if [[ -z "${pre}" ]]; then echo "Unable to identify work prefix"; return; fi
 
   declare -A modes
   modes=(
-    ['init']='_work_init'     \
-    ['conf']='_work_config'   \
-    ['env']='_work_setup_env' \
-    ['rc']='_work_rcFile'     \
+    ['init']='_arbeiter_init'     \
+    ['conf']='_arbeiter_config'   \
+    ['env']='_arbeiter_setup_env' \
+    ['rc']='_arbeiter_rcFile'     \
   )
 
-  for m in "${!_work_modes[@]}"; do
-    modes["${m}"]="${_work_modes[${m}]}"
+  for m in "${!_arbeiter_modes[@]}"; do
+    modes["${m}"]="${_arbeiter_modes[${m}]}"
   done
 
   # for tab completion
@@ -145,17 +175,17 @@ function _work_router {
 # calling ${HOME}/bin/mti will cause an infinite loop
 #geoModes=$(geo)
 #complete -F _geocompleter geo
-function _proj_completer {
+function _arbeiter_proj_completer () {
 
   if [[ ${#COMP_WORDS[@]} == 2 ]]; then
-    mapfile -t matches < <(compgen -W "conf env init ${!_work_modes[*]}" -- "${COMP_WORDS[$COMP_CWORD]}")
+    mapfile -t matches < <(compgen -W "conf env init ${!_arbeiter_modes[*]}" -- "${COMP_WORDS[$COMP_CWORD]}")
     COMPREPLY=( "${matches[@]}" )
   fi
 
   if [[ ${#COMP_WORDS[@]} -ge 3 ]]; then
     mode="${COMP_WORDS[1]}"
-    if [[ "${_work_modes[${mode}]+abc}" ]]; then
-        cmd="${_work_modes[${mode}]}"
+    if [[ "${_arbeiter_modes[${mode}]+abc}" ]]; then
+        cmd="${_arbeiter_modes[${mode}]}"
         mapfile -t startable < <("${cmd}")
         mapfile -t matches < <(compgen -W "${startable[*]}" -- "${COMP_WORDS[$COMP_CWORD]}")
         COMPREPLY=( "${matches[@]}" )
@@ -163,3 +193,54 @@ function _proj_completer {
   fi
   return 0
 }
+
+declare _arbeiter_cwd
+export _arbeiter_cwd
+
+complete -F _arbeiter_work_completer work
+complete -F _arbeiter_cert_completer cert
+
+function _arbeiter_complete () {
+  dir=$1
+  for name in "${COMP_WORDS[@]:1}"
+  do
+    if [ -d "$dir/$name" ]; then
+      dir=$dir/$name
+    fi
+  done
+
+  mapfile -t dirs < <(find "${dir}" -maxdepth 1 -type d)
+  mapfile -t dirs < <(for f in "${dirs[@]:1}"; do basename "${f}"; done)
+  mapfile -t COMPREPLY < <(compgen -W "${dirs[*]}" -- "${COMP_WORDS[$COMP_CWORD]}")
+
+  return 0
+}
+
+function _arbeiter_work_completer () { _arbeiter_complete "$WORKDIR"; }
+function _arbeiter_cert_completer () { _arbeiter_complete "$CERTDIR"; }
+
+function _arbeiter_changer () {
+  dir=$1
+  for arg in "${@:2}"
+  do
+    dir=${dir}/${arg}
+  done
+
+  if [ -d "${dir}" ]; then
+    pushd "${dir}" || return
+    _arbeiter_cwd="${dir}"
+  fi
+}
+
+#====[ Public Functions ]===================================
+function work () { _arbeiter_changer "$WORKDIR" "$@"; }
+function cert () { _arbeiter_changer "$CERTDIR" "$@"; }
+
+function mm  () {
+  deep="${#DIRSTACK[@]}"
+  if [ "${deep}" -gt 1 ]; then
+    popd || return
+  fi
+}
+
+alias cdw="cd \${_arbeiter_cwd}"

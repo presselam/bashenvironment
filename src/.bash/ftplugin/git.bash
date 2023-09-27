@@ -1,3 +1,4 @@
+alias guntracked='git ls-files --others --exclude-standard'
 
 # format with clang-format before adding to git
 validFiletypes="c|h|cpp|hpp|js|pl|pm|py"
@@ -37,16 +38,4 @@ function gcommit {
   fi
 
   git commit -m "${ticket^^} -- $1"
-}
-
-function term_git_title {
-
-  if git rev-parse --git-dir > /dev/null 2>&1; then
-    branch=$(git branch 2>/dev/null| sed -n '/^\*/s/^\* //p')
-    if git diff --quiet 2> /dev/null; then
-      printf '\ue0a0 %s\n ' "${branch}"
-    else
-      printf '\ue0a0 %s \u26A1\n ' "${branch}"
-    fi
-  fi
 }

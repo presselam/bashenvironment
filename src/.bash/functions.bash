@@ -6,17 +6,8 @@ CERTDIR="${basedir}/certification"
 CXAPDIR="${basedir}/cxap"
 EXPERDIR="${basedir}/experiment"
 
-declare _work_cwd
-export _work_cwd
-
-
-complete -F _work_completer work
-complete -F _cert_completer cert
 complete -F _exp_completer  exp
 complete -F _cxap_completer cxap
-
-alias cdw="cd \${_work_cwd}"
-
 
 function exp {
   dir=$EXPERDIR
@@ -45,73 +36,6 @@ function _exp_completer {
   mapfile -t COMPREPLY < <(compgen -W "${dirs[*]}" -- "${COMP_WORDS[$COMP_CWORD]}")
 
   return 0
-}
-
-function _work_completer {
-  dir=$WORKDIR
-  for name in "${COMP_WORDS[@]:1}"
-  do
-    if [ -d "$dir/$name" ]; then
-      dir=$dir/$name
-    fi
-  done
-
-  mapfile -t dirs < <(find "${dir}" -maxdepth 1 -type d)
-  mapfile -t dirs < <(for f in "${dirs[@]:1}"; do basename "${f}"; done)
-  mapfile -t COMPREPLY < <(compgen -W "${dirs[*]}" -- "${COMP_WORDS[$COMP_CWORD]}")
-
-  return 0
-}
-
-function _cert_completer {
-  dir=$CERTDIR
-  for name in "${COMP_WORDS[@]:1}"
-  do
-    if [ -d "$dir/$name" ]; then
-      dir=$dir/$name
-    fi
-  done
-
-  mapfile -t dirs < <(find "${dir}" -maxdepth 1 -type d)
-  mapfile -t dirs < <(for f in "${dirs[@]:1}"; do basename "${f}"; done)
-  mapfile -t COMPREPLY < <(compgen -W "${dirs[*]}" -- "${COMP_WORDS[$COMP_CWORD]}")
-
-  return 0
-}
-
-function work {
-  dir=$WORKDIR
-  for arg in "$@"
-  do
-    dir=${dir}/${arg}
-  done
-
-  if [ -d "${dir}" ]; then
-    pushd "${dir}" || return
-    _work_cwd="${dir}"
-  fi
-}
-
-
-function mm {
-  deep="${#DIRSTACK[@]}"
-  if [ "${deep}" -gt 1 ]; then
-    popd || return
-  fi
-}
-
-
-function cert {
-  dir=$CERTDIR
-  for arg in "$@"
-  do
-    dir=${dir}/${arg}
-  done
-
-  if [ -d "${dir}" ]; then
-    pushd "${dir}" || return
-    _work_cwd="${dir}"
-  fi
 }
 
 function cxap {
