@@ -122,7 +122,3 @@ PATH=".:$HOME/bin:$HOME/.local/bin:$PATH"
 
 #====[ SWIFT ]==============================================
 export PATH="$PATH:/usr/share/swift/usr/bin"
-
-
-# Load Angular CLI autocompletion.
-source <(ng completion script)

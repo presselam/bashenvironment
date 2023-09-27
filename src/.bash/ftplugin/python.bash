@@ -69,7 +69,7 @@ function pyvenv () {
     if [[ -d "${name}" ]];then
       message_alert "${name} already exists"
     else
-      python3 -m venv "${name}"
+      python -m venv "${name}"
     fi
   fi
 
