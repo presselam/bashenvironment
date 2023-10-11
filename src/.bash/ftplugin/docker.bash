@@ -12,6 +12,16 @@ declare _dService
 declare _dRegistry
 declare _dVersion
 
+function dmount {
+  if [[ -z "$1" ]]; then 
+    message_error "must specify a valid containerid"
+    return
+  fi
+
+  resp=$(docker inspect "$1")
+  echo "${resp}" | jq -r '.[].Mounts'
+}
+
 function dimage {
   args=$(getopt -o s:v:r: --long service:,version:,registry: -n dimage -aq -- "$@")
 

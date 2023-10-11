@@ -30,24 +30,26 @@ function _arbeiter_init () {
   initVars['WORKPRE']="${pre}"
 
   #====[ Read Project Config ]================================
-  while IFS="" read -r ln; do
-    if [[ "${ln}" =~ ^[:space:]*# ]]; then continue;                 fi
-    if [[ "${ln::1}" != " " ]];       then wanted=0;                 fi
-    if [[ "${ln::5}" == "init:" ]];   then wanted='init' ; continue; fi
-    if [[ "${ln::6}" == "modes:" ]];  then wanted='modes'; continue; fi
-    if [[ ${wanted} == 0 ]];          then continue;                 fi
+  if [[ -f "${rcFile}" ]]; then
+    while IFS="" read -r ln; do
+      if [[ "${ln}" =~ ^[:space:]*# ]]; then continue;                 fi
+      if [[ "${ln::1}" != " " ]];       then wanted=0;                 fi
+      if [[ "${ln::5}" == "init:" ]];   then wanted='init' ; continue; fi
+      if [[ "${ln::6}" == "modes:" ]];  then wanted='modes'; continue; fi
+      if [[ ${wanted} == 0 ]];          then continue;                 fi
 
-    # echo "[${ln}][${wanted}]"
-    key=$(echo "${ln%%:*}" | awk '{$1=$1;print}')
-    value=$(echo "${ln#*:}" | awk '{$1=$1;print}')
-    if [[ ${value::1} == '"' ]]; then value=$(eval echo "${value}"); fi
-    if [[ ${value::1} == "'" ]]; then value=$(echo "${value}" | awk '{print substr($0,2,length($0)-2)}'); fi
+      # echo "[${ln}][${wanted}]"
+      key=$(echo "${ln%%:*}" | awk '{$1=$1;print}')
+      value=$(echo "${ln#*:}" | awk '{$1=$1;print}')
+      if [[ ${value::1} == '"' ]]; then value=$(eval echo "${value}"); fi
+      if [[ ${value::1} == "'" ]]; then value=$(echo "${value}" | awk '{print substr($0,2,length($0)-2)}'); fi
 
-    # shellcheck disable=SC2034
-    if [[ "${wanted}" == 'init' ]]; then initVars["${key}"]="${value}"; fi
-    if [[ "${wanted}" == 'modes' ]]; then _arbeiter_modes[${key}]=${value}; fi
+      # shellcheck disable=SC2034
+      if [[ "${wanted}" == 'init' ]]; then initVars["${key}"]="${value}"; fi
+      if [[ "${wanted}" == 'modes' ]]; then _arbeiter_modes[${key}]=${value}; fi
 
-  done <"${rcFile}"
+    done <"${rcFile}"
+  fi
 
   _arbeiter_environment initVars # 2>&1 | cowsay -n -f happy-whale
 }

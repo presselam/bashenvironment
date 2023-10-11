@@ -56,7 +56,7 @@ sub checkPerlToolkit {
 
   my @retval;
   chdir($repo);
-  foreach my $subdir (qw{ bin lib }) {
+  foreach my $subdir ('bin','lib/perl5') {
     if ( -d $subdir ) {
       my @files = glob("$subdir/*");
       foreach my $file ( sort @files ) {

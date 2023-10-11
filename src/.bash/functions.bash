@@ -3,69 +3,6 @@ source "${HOME}/bin/common.sh"
 basedir="${WORKSPACE_DIR}"
 WORKDIR="${basedir}/projects"
 CERTDIR="${basedir}/certification"
-CXAPDIR="${basedir}/cxap"
-EXPERDIR="${basedir}/experiment"
-
-complete -F _exp_completer  exp
-complete -F _cxap_completer cxap
-
-function exp {
-  dir=$EXPERDIR
-  for arg in "$@"
-  do
-    dir="${dir}/${arg}"
-  done
-
-  if [ -d "${dir}" ]; then
-    pushd "${dir}" || return
-    _work_cwd="${dir}"
-  fi
-}
-
-function _exp_completer {
-  dir=$EXPERDIR
-  for name in "${COMP_WORDS[@]:1}"
-  do
-    if [ -d "$dir/$name" ]; then
-      dir=$dir/$name
-    fi
-  done
-
-  mapfile -t dirs < <(find "${dir}" -maxdepth 1 -type d)
-  mapfile -t dirs < <(for f in "${dirs[@]:1}"; do basename "${f}"; done)
-  mapfile -t COMPREPLY < <(compgen -W "${dirs[*]}" -- "${COMP_WORDS[$COMP_CWORD]}")
-
-  return 0
-}
-
-function cxap {
-  dir=$CXAPDIR
-  for arg in "$@"
-  do
-    dir="${dir}/${arg}"
-  done
-
-  if [ -d "${dir}" ]; then
-    pushd "${dir}" || return
-    _work_cwd="${dir}"
-  fi
-}
-
-function _cxap_completer {
-  dir=$CXAPDIR
-  for name in "${COMP_WORDS[@]:1}"
-  do
-    if [ -d "$dir/$name" ]; then
-      dir="$dir/$name"
-    fi
-  done
-
-  mapfile -t dirs < <(find "${dir}" -maxdepth 1 -type d)
-  mapfile -t dirs < <(for f in "${dirs[@]:1}"; do basename "${f}"; done)
-  mapfile -t COMPREPLY < <(compgen -W "${dirs[*]}" -- "${COMP_WORDS[$COMP_CWORD]}")
-
-  return 0
-}
 
 function windo {
   bs="$1" 
@@ -163,4 +100,15 @@ function r () {
   do
     fc -s "${cmd}"
   done
+}
+
+function fp {
+  results=$(apt list)
+
+  for arg in "$@"
+  do
+    results=$(echo "$results" | grep "$arg")
+  done
+
+  echo "$results"
 }

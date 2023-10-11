@@ -1,2 +1,2 @@
-export PERL5LIB=$HOME/lib
+export PERL5LIB=$HOME/lib/perl5
 
