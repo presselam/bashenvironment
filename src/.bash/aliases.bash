@@ -7,7 +7,7 @@ alias less='less -R'
 
 #====[ directory listing ]==================================
 alias ll='ls -lrt'
-alias la='ls -A'
+alias la='ls -Alrt'
 alias lisa='ls -lisart'
 
 #====[ editors ]============================================
@@ -42,5 +42,4 @@ alias h2d='bindechexascii --h2d'
 alias kube='kubectl'
 source <(kubectl completion bash)
 complete -F __start_kubectl kube
-source /opt/istio-1.13.2/tools/istioctl.bash
-
+#source /opt/istio-1.13.2/tools/istioctl.bash

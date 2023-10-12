@@ -31,8 +31,7 @@ shopt -s checkwinsize
 
 # set vi editing mode on the commandline
 set -o vi
-#export EDITOR='/usr/bin/nvim'
-export EDITOR='/usr/local/bin/vim'
+export EDITOR='/usr/bin/vim'
 
 # set pipes to cascade fail
 set -o pipefail
