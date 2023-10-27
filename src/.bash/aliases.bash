@@ -1,4 +1,4 @@
-alias reload='source $HOME/.bashrc'
+alias reload='source $HOME/.bash/bashrc'
 
 #====[ basics ]=============================================
 alias rm='rm -i'
