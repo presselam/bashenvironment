@@ -7,7 +7,7 @@ CERTDIR="${basedir}/certification"
 function windo {
   bs="$1" 
   if [[ -f "${bs}" ]]; then
-    bs='\\wsl$\Ubuntu'$(readlink -f "${bs}")
+    bs="\\\\wsl\$\\${WSL_DISTRO_NAME}"$(readlink -f "${bs}")
   fi
 
   bs="${bs//\//\\}"
