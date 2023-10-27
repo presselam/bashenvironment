@@ -237,6 +237,7 @@ function _arbeiter_changer () {
 #====[ Public Functions ]===================================
 function work () { _arbeiter_changer "$WORKDIR" "$@"; }
 function cert () { _arbeiter_changer "$CERTDIR" "$@"; }
+function devtools () { _arbeiter_changer "$WORKDIR/devtools" "$@"; }
 
 function mm  () {
   deep="${#DIRSTACK[@]}"
