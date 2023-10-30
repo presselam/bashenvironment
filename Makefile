@@ -6,18 +6,14 @@ EXCLUDE=--exclude='*'
 
 RSYC_OPT=-avhc
 
-.PHONY: diff install aptinstall
+.PHONY: install aptinstall
 
-diff : $(addprefix diff-, $(SOURCE_FILES))
+diff : 
+	diff -rwaq src/.bash ${HOME}/.bash || true
+	for file in src/bin/*; do        \
+		diff -waq $$file ${HOME}/bin/ || true; \
+	done
 
-diff-% : $(addprefix src/, $(SOURCE_FILES))
-	-colordiff src/$* ${HOME}/$* || true
-
-diff-.bash/% : $(addprefix src/, $(SOURCE_FILES))
-	-colordiff src/.bash/$* ${HOME}/.bash/$* || true
-
-diff-bin/% : $(addprefix src/, $(SOURCE_FILES))
-	-colordiff src/bin/$* ${HOME}/bin/$* || true
 
 fake :
 	rsync --dry-run $(RSYC_OPT) $(INCLUDE) $(EXCLUDE) src/ ${HOME}/
@@ -27,6 +23,11 @@ sync :
 
 install :
 	rsync $(RSYC_OPT) $(INCLUDE) $(EXCLUDE) src/ ${HOME}/
+	ln -fs ${HOME}/.bash/bashrc ${HOME}/.bashrc
+	ln -fs ${HOME}/.bash/bash_logout ${HOME}/.bash_logout
+	ln -fs ${HOME}/.bash/dots/inputrc ${HOME}/.inputrc
+	ln -fs ${HOME}/.bash/dots/dircolors ${HOME}/.dircolors
+
 
 aptinstall :
 	sudo apt update -y

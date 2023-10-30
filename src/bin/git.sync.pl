@@ -81,21 +81,29 @@ sub createFake {
     return wantarray ? () : [];
   }
 
+  message("Checking $repo");
   chdir($repo);
-  my @output = qx{ make fake };
+  my @output = qx{ make diff };
 
   my @retval;
   my $dir = './';
   foreach my $ln (@output) {
     chomp($ln);
+    quick($ln) if ( $opts{'verbose'} );
 
-    if ( $ln =~ /^rsync/ ) {
-      my @chunk = split( /\s+/, $ln );
-      $dir = $chunk[-2];
+    my $mark = undef;
+    my @parts = split(/\s+/, $ln);
+    if( $parts[0] eq 'Only' ){
+      if( $parts[2] =~ /$ENV{'HOME'}/ ){
+        $mark = '>>';
+      }else{
+        $mark = '<<'
+      }
+    }elsif( $parts[0] eq 'Files' ){
+      $mark = '--';
     }
 
-    quick($ln) if ( $opts{'verbose'} );
-    push( @retval, "$ln" ) if ( -f "$dir$ln" );
+    push( @retval, "$mark $parts[3]" ) if( $mark );
   }
 
   return wantarray ? @retval : \@retval;
