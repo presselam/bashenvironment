@@ -1,3 +1,4 @@
+
 declare -gA _arbeiter_modes
 declare -gA _arbeiter_vars
 unset WORKPRE
@@ -86,7 +87,10 @@ function _arbeiter_rcFile () {
 function _arbeiter_config () {
   confScript=$1
   if [[ -z "${confScript}" ]]; then
-    confScript="$HOME/bin/$WORKPRE.conf.sh"
+    confScript="$HOME/bin/$WORKPRE/$WORKPRE.conf.sh"
+    if [[ ! -f "${confScript}" ]]; then
+      confScript="$HOME/bin/$WORKPRE.conf.sh"
+    fi
   fi
 
   cwd=$(pwd)
@@ -111,7 +115,10 @@ function _arbeiter_config () {
 function _arbeiter_setup_env () {
   confScript=$1
   if [[ -z "${confScript}" ]]; then
-    confScript="$HOME/bin/$WORKPRE.conf.sh"
+    confScript="$HOME/bin/$WORKPRE/$WORKPRE.conf.sh"
+    if [[ ! -f "${confScript}" ]]; then
+      confScript="$HOME/bin/$WORKPRE.conf.sh"
+    fi
   fi
 
   if ! "${confScript}" "$1"; then
@@ -218,8 +225,23 @@ function _arbeiter_complete () {
   return 0
 }
 
-function _arbeiter_work_completer () { _arbeiter_complete "$WORKDIR"; }
-function _arbeiter_cert_completer () { _arbeiter_complete "$CERTDIR"; }
+function _arbeiter_work_completer () {
+  if [[ -f "$WORKDIR" ]]; then
+    message_alert "WORKDIR is not set"
+    return
+  fi
+
+  _arbeiter_complete "$WORKDIR";
+}
+
+function _arbeiter_cert_completer () {
+  if [[ -f "$CERTDIR" ]]; then
+    message_alert "CERTDIR is not set"
+    return
+  fi
+
+  _arbeiter_complete "$CERTDIR";
+}
 
 function _arbeiter_changer () {
   dir=$1
@@ -235,9 +257,32 @@ function _arbeiter_changer () {
 }
 
 #====[ Public Functions ]===================================
-function work () { _arbeiter_changer "$WORKDIR" "$@"; }
-function cert () { _arbeiter_changer "$CERTDIR" "$@"; }
-function devtools () { _arbeiter_changer "$WORKDIR/devtools" "$@"; }
+function work () {
+  if [[ -f "$WORKDIR" ]]; then
+    message_alert "WORKDIR is not set"
+    return
+  fi
+
+  _arbeiter_changer "$WORKDIR" "$@";
+}
+function cert () {
+  if [[ -f "$CERTDIR" ]]; then
+    message_alert "CERTDIR is not set"
+    return
+  fi
+
+  _arbeiter_changer "$CERTDIR" "$@";
+}
+
+function dt () {
+  if [[ -z "$WORKDIR" ]]; then
+    message_alert "WORKDIR is not set"
+    return
+  fi
+
+  _arbeiter_changer "$WORKDIR/devtools" "$@";
+}
+
 
 function mm  () {
   deep="${#DIRSTACK[@]}"
@@ -247,3 +292,26 @@ function mm  () {
 }
 
 alias cdw="cd \${_arbeiter_cwd}"
+
+function cds () {
+  dir=$(pwd)
+
+  while [[ "${dir}" != '/' &&  $(basename "${dir}") != 'src' ]]
+  do
+    dir=$(dirname "${dir}")
+  done
+
+  cd "${dir}" || return 1
+}
+
+function cdr () {
+  dir=$(pwd)
+
+  while [[ "${dir}" != '/' && ! -d "${dir}/.git/" ]]
+  do
+    dir=$(dirname "${dir}")
+  done
+
+  cd "${dir}" || return 1
+}
+

@@ -26,6 +26,8 @@ alias mine='ps -eaf | grep $USER'
 alias diff='colordiff'
 alias cpptidy='clang-format -i'
 alias cprofile='valgrind --tool=callgrind'
+alias catm='batcat'
+
 
 #====[ GIT ]================================================
 alias git.junk='git ls-files --others --exclude-standard'
@@ -37,9 +39,3 @@ alias d2b='bindechexascii --d2b'
 alias d2h='bindechexascii --d2h'
 alias h2b='bindechexascii --h2b'
 alias h2d='bindechexascii --h2d'
-
-
-alias kube='kubectl'
-source <(kubectl completion bash)
-complete -F __start_kubectl kube
-#source /opt/istio-1.13.2/tools/istioctl.bash
