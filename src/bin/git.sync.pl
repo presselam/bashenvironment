@@ -38,7 +38,7 @@ sub main {
   foreach my $key ( sort keys %{$binaries} ) {
     my @changed = createFake( $binaries->{$key} );
     if ( scalar @changed ) {
-      message( $key => map { green("  $_") } @changed );
+      message( $key => @changed );
     }
   }
 
@@ -56,12 +56,12 @@ sub checkPerlToolkit {
 
   my @retval;
   chdir($repo);
-  foreach my $subdir ('bin','lib/perl5') {
+  foreach my $subdir ( 'bin', 'lib/perl5' ) {
     if ( -d $subdir ) {
       my @files = glob("$subdir/*");
       foreach my $file ( sort @files ) {
         if ( system("diff -q $file $ENV{'HOME'}/$file > /dev/null 2>&1") ) {
-          push( @retval, $file);
+          push( @retval, $file );
         } else {
           quick( same => $file ) if ( $opts{'verbose'} );
         }
@@ -91,19 +91,28 @@ sub createFake {
     chomp($ln);
     quick($ln) if ( $opts{'verbose'} );
 
-    my $mark = undef;
-    my @parts = split(/\s+/, $ln);
-    if( $parts[0] eq 'Only' ){
-      if( $parts[2] =~ /$ENV{'HOME'}/ ){
-        $mark = '>>';
-      }else{
-        $mark = '<<'
+    my $format = \&white;
+    my $mark   = undef;
+    my @parts  = split( /\s+/, $ln );
+    if ( $parts[0] eq 'Only' ) {
+      if ( $parts[2] =~ /$ENV{'HOME'}/ ) {
+        $mark   = '--';
+        $format = \&red;
+      } else {
+        $mark   = '++';
+        $format = \&green;
       }
-    }elsif( $parts[0] eq 'Files' ){
-      $mark = '--';
+
+      $parts[2] =~ s/:/\//;
+      $parts[2] =~ s/$ENV{'HOME'}\///g;
+    } elsif ( $parts[0] eq 'Files' ) {
+      $mark   = '==';
+      $format = \&magenta;
+
+      $parts[2] = '';
     }
 
-    push( @retval, "$mark $parts[3]" ) if( $mark );
+    push( @retval, $format->("$mark $parts[2]$parts[3]") ) if ($mark);
   }
 
   return wantarray ? @retval : \@retval;
