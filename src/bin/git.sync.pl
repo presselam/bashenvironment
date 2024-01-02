@@ -83,7 +83,7 @@ sub createFake {
 
   message("Checking $repo");
   chdir($repo);
-  my @output = qx{ make diff };
+  my @output = qx{ make brief };
 
   my @retval;
   my $dir = './';

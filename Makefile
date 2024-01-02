@@ -9,11 +9,16 @@ RSYC_OPT=-avhc
 .PHONY: install aptinstall
 
 diff : 
+	diff -rwa src/.bash ${HOME}/.bash || true
+	for file in src/bin/*; do        \
+		diff -wa $$file ${HOME}/bin/ || true; \
+	done
+
+brief : 
 	diff -rwaq src/.bash ${HOME}/.bash || true
 	for file in src/bin/*; do        \
 		diff -waq $$file ${HOME}/bin/ || true; \
 	done
-
 
 fake :
 	rsync --dry-run $(RSYC_OPT) $(INCLUDE) $(EXCLUDE) src/ ${HOME}/
