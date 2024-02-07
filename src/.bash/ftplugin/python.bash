@@ -61,7 +61,8 @@ function pyvenv () {
     pipenv install --dev
     return
   else
-    name='.venv'
+    app=$(basename $(pwd))
+    name=".${app}-venv"
     if [[ $# == 1 ]]; then
       name=".$1-venv"
     fi

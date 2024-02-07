@@ -39,3 +39,12 @@ function gcommit {
 
   git commit -m "${ticket^^} -- $1"
 }
+
+function gfresh {
+  git fetch -p
+  git checkout .
+  git switch main
+  git pull
+  git switch development
+  git pull
+}

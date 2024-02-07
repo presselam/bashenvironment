@@ -2,17 +2,31 @@
 function pom () {
   local path
   path=$(pwd)
-  local pomFile
+  local -a pomFile
   while [[ "${path}" != '/' ]]; do
     if [[ -f "${path}/pom.xml" ]]; then
-      pomFile="${path}/pom.xml"
-      break
+      pomFile+=("${path}/pom.xml")
     fi
     path=$(dirname "${path}")
   done
 
-  if [[ -n "${pomFile}" ]]; then
-    ${EDITOR} "${path}/pom.xml"
+  selected=0
+  if [[ ${#pomFile[@]} -gt 1 ]]; then
+    message_alert "Found ${#pomFile[@]} pomfiles"
+    idx=0
+    for pom in "${pomFile[@]}";
+    do
+      echo "  [${idx}] - $pom"
+      idx=$((idx + 1))
+    done
+    echo "Select pomfile: "
+    read -r selected
+  fi
+
+  file=${pomFile[${selected}]}
+
+  if [[ -n "${file}" ]]; then
+    "${EDITOR}" "${file}"
   else
     message_alert "Unable to find a pom"
   fi  

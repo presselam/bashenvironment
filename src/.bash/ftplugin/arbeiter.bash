@@ -174,7 +174,7 @@ function _arbeiter_router () {
   if [[ ${#requested[@]} == 1 ]]; then
     mode=${requested[0]}
     cmd=${modes["${mode}"]}
-    "${cmd}" "${@:2}"
+    ${cmd} "${@:2}"  # cmd not quoted to explicitly expand spaces
   else
     message_error "Ambiguous modes: ${requested[*]}"
   fi
@@ -208,9 +208,15 @@ export _arbeiter_cwd
 
 complete -F _arbeiter_work_completer work
 complete -F _arbeiter_cert_completer cert
+complete -F _arbeiter_exp_completer exp
 
 function _arbeiter_complete () {
   dir=$1
+  if [[ ! -d "${dir}" ]]; then
+    message_alert "base directory is not set"
+    return
+  fi
+
   for name in "${COMP_WORDS[@]:1}"
   do
     if [ -d "$dir/$name" ]; then
@@ -225,26 +231,18 @@ function _arbeiter_complete () {
   return 0
 }
 
-function _arbeiter_work_completer () {
-  if [[ -f "$WORKDIR" ]]; then
-    message_alert "WORKDIR is not set"
-    return
-  fi
-
-  _arbeiter_complete "$WORKDIR";
-}
-
-function _arbeiter_cert_completer () {
-  if [[ -f "$CERTDIR" ]]; then
-    message_alert "CERTDIR is not set"
-    return
-  fi
-
-  _arbeiter_complete "$CERTDIR";
-}
+function _arbeiter_work_completer () { _arbeiter_complete "$WORKDIR"; }
+function _arbeiter_cert_completer () { _arbeiter_complete "$CERTDIR"; }
+function _arbeiter_exp_completer () { _arbeiter_complete "$WORKDIR/experiments"; }
 
 function _arbeiter_changer () {
   dir=$1
+   
+  if [[ ! -d "${dir}" ]]; then
+    message_alert "base directory not set"
+    return
+  fi
+
   for arg in "${@:2}"
   do
     dir=${dir}/${arg}
@@ -257,31 +255,11 @@ function _arbeiter_changer () {
 }
 
 #====[ Public Functions ]===================================
-function work () {
-  if [[ -f "$WORKDIR" ]]; then
-    message_alert "WORKDIR is not set"
-    return
-  fi
+function work () { _arbeiter_changer "$WORKDIR" "$@"; }
+function cert () { _arbeiter_changer "$CERTDIR" "$@"; }
+function dt   () { _arbeiter_changer "$WORKDIR/devtools" "$@"; }
+function exp  () { _arbeiter_changer "$WORKDIR/experiments" "$@"; }
 
-  _arbeiter_changer "$WORKDIR" "$@";
-}
-function cert () {
-  if [[ -f "$CERTDIR" ]]; then
-    message_alert "CERTDIR is not set"
-    return
-  fi
-
-  _arbeiter_changer "$CERTDIR" "$@";
-}
-
-function dt () {
-  if [[ -z "$WORKDIR" ]]; then
-    message_alert "WORKDIR is not set"
-    return
-  fi
-
-  _arbeiter_changer "$WORKDIR/devtools" "$@";
-}
 
 
 function mm  () {
