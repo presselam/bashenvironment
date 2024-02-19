@@ -162,9 +162,9 @@ function _arbeiter_router () {
 
   for m in "${!modes[@]}"
   do
-    for var in "$@"
+    for var in "$1"
     do
-      # echo "[${var}][${m}]"
+      #echo "[${var}][${m}]"
       if [[ "${m}" == "${var}"* ]]; then
         requested+=("${m}")
       fi
