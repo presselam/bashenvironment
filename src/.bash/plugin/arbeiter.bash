@@ -135,6 +135,26 @@ function _arbeiter_setup_env () {
   fi
 }
 
+function _arbeiter_repos () {
+  if [[ ! -x "$HOME/bin/work.clone.pl" ]];
+  then
+    message_error 'Unable to execute repo clone script'
+    return 1
+  fi
+
+  "$HOME/bin/work.clone.pl" "$@"
+}
+
+function _arbeiter_status () {
+  if [[ ! -x "$HOME/bin/work.status.pl" ]];
+  then
+    message_error 'Unable to execute repo status script'
+    return 1
+  fi
+
+  "$HOME/bin/work.status.pl" "$@"
+}
+
 function _arbeiter_router () {
 
   pre=${FUNCNAME[1]}
@@ -146,6 +166,8 @@ function _arbeiter_router () {
     ['conf']='_arbeiter_config'   \
     ['env']='_arbeiter_setup_env' \
     ['rc']='_arbeiter_rcFile'     \
+    ['clone']='_arbeiter_repos'   \
+    ['status']='_arbeiter_status' \
   )
 
   for m in "${!_arbeiter_modes[@]}"; do
@@ -187,7 +209,7 @@ function _arbeiter_router () {
 function _arbeiter_proj_completer () {
 
   if [[ ${#COMP_WORDS[@]} == 2 ]]; then
-    mapfile -t matches < <(compgen -W "conf env init ${!_arbeiter_modes[*]}" -- "${COMP_WORDS[$COMP_CWORD]}")
+    mapfile -t matches < <(compgen -W "conf env init rc clone status ${!_arbeiter_modes[*]}" -- "${COMP_WORDS[$COMP_CWORD]}")
     COMPREPLY=( "${matches[@]}" )
   fi
 

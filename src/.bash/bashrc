@@ -98,7 +98,7 @@ if [ -f "${HOME}/.bash/functions.bash" ]; then
 fi
 
 #====[ type plugins ]=======================================
-plugins=('ftplugin' 'projects')
+plugins=('plugin' 'ftplugin' 'projects')
 for plug_dir in "${plugins[@]}"
 do
   if [[ -d "${HOME}/.bash/${plug_dir}" ]]; then
@@ -111,13 +111,5 @@ do
   fi
 done
 
-#====[ X11 ]================================================
-hostname=$(awk '/nameserver / {print $2; exit}' /etc/resolv.conf 2>/dev/null)
-export DISPLAY="${hostname}:0"
-
-
 # set PATH so it includes user's private bin directories
 PATH=".:$HOME/bin:$HOME/.local/bin:$PATH"
-
-#====[ SWIFT ]==============================================
-export PATH="$PATH:/usr/share/swift/usr/bin"

@@ -12,12 +12,9 @@ alias lisa='ls -lisart'
 
 #====[ editors ]============================================
 alias vir='vim -R'
+alias vif='vim $(fzf)'
 alias idea='idea64.exe . &'
 
-#====[ search ]=============================================
-alias fif="find . -type f -not -path \"*/.git/*\" 2> /dev/null | xargs -d '\n' grep"
-alias ff="find . -type f -not -path \"*/.git/*\" -name "
-alias fd="find . -type d -not -path \"*/.git/*\" -name "
 
 #====[ miscellaneous ]======================================
 alias bok='vi ${HOME}/.bok'
@@ -26,7 +23,7 @@ alias mine='ps -eaf | grep $USER'
 alias diff='colordiff'
 alias cpptidy='clang-format -i'
 alias cprofile='valgrind --tool=callgrind'
-alias catm='batcat'
+alias cat='batcat'
 
 
 #====[ GIT ]================================================

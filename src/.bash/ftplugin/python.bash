@@ -1,22 +1,6 @@
 #====[ PYTHON SETTINGS ]====================================
 export PYTHONPATH="$HOME/lib/python"
 
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-#__conda_setup="$("${HOME}/anaconda3/bin/conda" 'shell.bash' 'hook' 2> /dev/null)"
-#rc=$?
-#if [ "${rc}" -eq 0 ]; then
-#  eval "$__conda_setup"
-#else
-#  if [ -f "${HOME}/anaconda3/etc/profile.d/conda.sh" ]; then
-#     . "${HOME}/anaconda3/etc/profile.d/conda.sh"
-#  else
-#     export PATH="${HOME}/anaconda3/bin:$PATH"
-#  fi
-#fi
-#unset __conda_setup
-# <<< conda initialize <<<
-
 # python virtual environment. my powerline shows it
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 
@@ -77,7 +61,24 @@ function pyvenv () {
   pyactivate
 }
 alias pyv=pyvenv
-alias pylib='pushd $VIRTUAL_ENV/lib/*/site-packages/'
+
+function pylib {
+  local path
+  if [[ -n $VIRTUAL_ENV ]]; then
+    path=$VIRTUAL_ENV
+  elif [[ -f Pipfile ]]; then
+    path=$(pipenv --venv)
+  else
+    mapfile -t venv  < <(find . -maxdepth 3 -type d -name '*venv')
+    if [[ ${#venv[@]} == 1 ]]; then
+      path=${venv[0]}
+    fi
+  fi
+
+  message_alert "venv: [$path]"
+  pushd "${path}"/lib/*/site-packages/ || return 1
+}
+alias pyl=pylib
 
 function pyrm () {
 

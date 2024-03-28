@@ -20,25 +20,37 @@ function message_alert {
   printf "${GREEN_TEXT}  %s${NORMAL}\n" "$@"
 }
 
-#function myip () {
-# ipaddr=$(hostname -I | awk -F' ' '{print $1}')
-#  ipaddr=$(grep host.docker.internal /etc/hosts | awk '{ print $1}')
-#
-#  if [[ -z ${ipaddr} ]]; then
-#    for interface in 'eth2' 'eth1' 'eth0' 'wifi0'
-#    do
-#      echo ${interface}
-#      ipaddr=$(ifconfig ${interface} | grep 'inet ' | awk '{print $2}')
-#      if [[ -n ${ipaddr} ]]; then
-#        break
-#      fi
-#    done
-#  fi
-#
-#  if [[ -z ${ipaddr} ]]; then
-#    message_alert "Unable to determine local ipaddr"
-#    exit 1
-#  fi
-#
-#  echo "${ipaddr}"
-#}
+function setupEnvironment {
+  message_alert "Setting up Environment"
+
+  echo "" >> "${localFile}"
+  echo "# mti-conf-injected" >> "${localFile}"
+
+  if [[ ${#configuration[@]} == 0 ]]; then
+    message_error "No configuration set; bad caller"
+    exit 9
+  fi
+
+  mapfile -t sorted < <(echo "${!configuration[@]}" | tr ' ' '\n' | sort)
+
+  width=1
+  for param in "${sorted[@]}"; do
+    wide=${#param}
+    if [[ ${width} -lt ${wide} ]];then
+      width=${wide}
+    fi
+  done
+
+  for param in "${sorted[@]}"; do
+    if grep -qw "${param}" "${localFile}"; then
+     printf "%9s: %-${width}s => %s\n" 'Replacing' "${param}" "${configuration[$param]}"
+     sed -i "s/export ${param}=.*/export ${param}='${configuration[${param}]//\//\\\/}'/" "${localFile}"
+    else
+     printf "%-9s: %-${width}s => %s\n" 'Adding' "${param}" "${configuration[$param]}"
+     echo "export ${param}='${configuration[$param]}'" >> "${localFile}"
+    fi
+  done
+
+  message_alert "Checking for Misconfigured Variables"
+  grep "\-\-REPLACE\-\-" "${localFile}"
+}

@@ -36,7 +36,9 @@ sub main {
 
   my $binaries = $config->{'binaries'};
   foreach my $key ( sort keys %{$binaries} ) {
-    my @changed = createFake( $binaries->{$key} );
+    my $dir = $binaries->{$key};
+    $dir =~ s/\$\{(.+?)\}/$ENV{$1}/go;
+    my @changed = createFake( $dir );
     if ( scalar @changed ) {
       message( $key => @changed );
     }
@@ -44,7 +46,9 @@ sub main {
 
   my $libs = $config->{'libraries'};
   foreach my $key ( sort keys %{$libs} ) {
-    my @changed = checkPerlToolkit( $libs->{$key} );
+    my $dir = $libs->{$key};
+    $dir =~ s/\$\{(.+?)\}/$ENV{$1}/go;
+    my @changed = checkPerlToolkit( $dir );
     if ( scalar @changed ) {
       message( $key => map { green("  $_") } @changed );
     }

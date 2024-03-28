@@ -22,7 +22,7 @@ function explore {
     bs=$(readlink -f .)
   fi
 
-  windo explorer '\\wsl$\Ubuntu'"${bs//\//\\}"
+  windo explorer '\\wsl$\Ubuntu-22.04'"${bs//\//\\}"
 }
 
 calc(){ awk "BEGIN{ print $* }" ;}

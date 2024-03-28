@@ -28,6 +28,8 @@ function gcommit {
     return
   fi
 
+  branch=$(basename "${branch}")
+
   [[ ${branch^^} =~ (^[[:alpha:]]+-[[:digit:]]+) ]]
   ticket="${BASH_REMATCH[1]}"
 
