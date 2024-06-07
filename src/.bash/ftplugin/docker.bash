@@ -61,7 +61,7 @@ function dimage {
 
 function dbuild {
   dimage "$@"
-  args=$(getopt -o pnc:b: --long plain,nocache,context:,verbose,buildarg: -n dbuild -aq -- "$@")
+  args=$(getopt -o pnc:b:f: --long plain,nocache,context:,verbose,buildarg:file: -n dbuild -aq -- "$@")
 
   context='.'
   progress='auto'
@@ -78,6 +78,7 @@ function dbuild {
       -n | --nocache)  cache='yes';      shift   ;;
       -c | --context)  context="$2";     shift 2 ;;
       -b | --buildarg) buildArgs+=("--build-arg=$2"); shift 2;;
+      -f | --file)     dfile="$2";       shift 2 ;;
       --verbose)       verbose=1;        shift   ;;
       --) shift; break;;
       *) message_error "$1 unknown"; exit;;

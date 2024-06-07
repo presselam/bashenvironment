@@ -37,6 +37,18 @@ function fzg {
   done
 
   echo "${results}" | \
-    fzf -d ':' -n 2 --ansi --no-sort --preview-window 'down:+{2}' --preview 'batcat --style=numbers --color=always --highlight-line {2} {1}'  | \
-    cut -d ':' -f 1
+    fzf -d ':' -n 2 --ansi --no-sort --preview-window 'down:+{2}' --preview 'batcat --style=numbers --color=always --highlight-line {2} {1}'
 }
+
+function vig {
+  result="$(fzg "$@")"
+  if [[ -z "${result}" ]]; then return; fi
+
+  mapfile -t result < <(echo "${result}" | awk -F':' '{printf "+%s\n%s\n", $2, $1}')
+  $EDITOR "${result[@]}"
+}
+
+function vif {
+  $EDITOR "$(fzf --query="$1")"
+}
+

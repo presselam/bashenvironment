@@ -12,18 +12,16 @@ alias lisa='ls -lisart'
 
 #====[ editors ]============================================
 alias vir='vim -R'
-alias vif='vim $(fzf)'
 alias idea='idea64.exe . &'
 
 
 #====[ miscellaneous ]======================================
 alias bok='vi ${HOME}/.bok'
 alias junk='vi /tmp/junk.amp'
-alias mine='ps -eaf | grep $USER'
 alias diff='colordiff'
 alias cpptidy='clang-format -i'
 alias cprofile='valgrind --tool=callgrind'
-alias cat='batcat'
+alias cat='batcat --paging=never'
 
 
 #====[ GIT ]================================================

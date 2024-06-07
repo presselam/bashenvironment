@@ -253,9 +253,9 @@ function _arbeiter_complete () {
   return 0
 }
 
-function _arbeiter_work_completer () { _arbeiter_complete "$WORKDIR"; }
-function _arbeiter_cert_completer () { _arbeiter_complete "$CERTDIR"; }
-function _arbeiter_exp_completer () { _arbeiter_complete "$WORKDIR/experiments"; }
+function _arbeiter_work_completer () { _arbeiter_complete "$WORKSPACE_DIR/$WORKPRE/projects"; }
+function _arbeiter_cert_completer () { _arbeiter_complete "$WORKSPACE_DIR/$WORKPRE/certification"; }
+function _arbeiter_exp_completer () { _arbeiter_complete "$WORKSPACE_DIR/$WORKPRE/experiments"; }
 
 function _arbeiter_changer () {
   dir=$1
@@ -277,10 +277,10 @@ function _arbeiter_changer () {
 }
 
 #====[ Public Functions ]===================================
-function work () { _arbeiter_changer "$WORKDIR" "$@"; }
-function cert () { _arbeiter_changer "$CERTDIR" "$@"; }
-function dt   () { _arbeiter_changer "$WORKDIR/devtools" "$@"; }
-function exp  () { _arbeiter_changer "$WORKDIR/experiments" "$@"; }
+function work () { _arbeiter_changer "$WORKSPACE_DIR/$WORKPRE/projects" "$@"; }
+function cert () { _arbeiter_changer "$WORKSPACE_DIR/$WORKPRE/certification" "$@"; }
+function dt   () { _arbeiter_changer "$WORKSPACE_DIR/$WORKPRE/devtools" "$@"; }
+function exp  () { _arbeiter_changer "$WORKSPACE_DIR/$WORKPRE/experiments" "$@"; }
 
 
 

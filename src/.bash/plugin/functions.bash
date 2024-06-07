@@ -112,3 +112,16 @@ function fp {
 
   echo "$results"
 }
+
+function mine {
+  results=$(ps -p $(pgrep -u "$UID") | grep -v 'ps -p')
+
+
+  for arg in "$@"
+  do
+    results=$(echo "$results" | grep "$arg")
+  done
+
+  echo "$results"
+}
+

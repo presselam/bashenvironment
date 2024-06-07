@@ -100,11 +100,11 @@ sub createFake {
     my @parts  = split( /\s+/, $ln );
     if ( $parts[0] eq 'Only' ) {
       if ( $parts[2] =~ /$ENV{'HOME'}/ ) {
-        $mark   = '--';
-        $format = \&red;
-      } else {
         $mark   = '++';
         $format = \&green;
+      } else {
+        $mark   = '--';
+        $format = \&red;
       }
 
       $parts[2] =~ s/:/\//;
