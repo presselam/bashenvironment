@@ -155,6 +155,15 @@ function _arbeiter_status () {
   "$HOME/bin/work.status.pl" "$@"
 }
 
+function _arbeiter_bin_dir () {
+  if [[ $# -gt 0 ]]; then
+    "${EDITOR}" -s <(printf "/%s\n" "$1") "$HOME/bin/$WORKPRE"
+  else
+    "${EDITOR}" "$HOME/bin/$WORKPRE"
+  fi
+}
+
+
 function _arbeiter_router () {
 
   pre=${FUNCNAME[1]}
@@ -162,6 +171,7 @@ function _arbeiter_router () {
 
   declare -A modes
   modes=(
+    ['bin']='_arbeiter_bin_dir'     \
     ['init']='_arbeiter_init'     \
     ['conf']='_arbeiter_config'   \
     ['env']='_arbeiter_setup_env' \
@@ -195,8 +205,9 @@ function _arbeiter_router () {
 
   if [[ ${#requested[@]} == 1 ]]; then
     mode=${requested[0]}
+
     cmd=${modes["${mode}"]}
-    ${cmd} "${@:2}"  # cmd not quoted to explicitly expand spaces
+    eval "$cmd" "${@:2}"  # cmd not quoted to explicitly expand spaces
   else
     message_error "Ambiguous modes: ${requested[*]}"
   fi

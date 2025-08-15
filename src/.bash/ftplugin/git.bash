@@ -39,7 +39,15 @@ function gcommit {
     return
   fi
 
-  git commit -m "${ticket^^} -- $1"
+  git commit -m "${ticket^^} -- $*"
+}
+
+function gclean {
+  git fetch -p
+  branch=$(git symbolic-ref refs/remotes/origin/HEAD)
+  branch=$(basename "${branch}")
+  git checkout "${branch}"
+  git branch -vv | grep ': gone]' | awk '{print $1}' | xargs git branch -D
 }
 
 function gfresh {

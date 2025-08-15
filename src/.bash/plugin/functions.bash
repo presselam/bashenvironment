@@ -1,16 +1,14 @@
 source "${HOME}/bin/common.sh"
 
-basedir="${WORKSPACE_DIR}"
-WORKDIR="${basedir}/projects"
-CERTDIR="${basedir}/certification"
-
 function windo {
   bs="$1" 
   if [[ -f "${bs}" ]]; then
     bs="\\\\wsl\$\\${WSL_DISTRO_NAME}"$(readlink -f "${bs}")
+    bs="${bs//\//\\}"
+  elif [[ "${bs}" == http* ]]; then
+    bs="start chrome ${bs}"
   fi
 
-  bs="${bs//\//\\}"
   echo "Running: $bs"
   cmd.exe /c "$bs" "${@:2}"
 }

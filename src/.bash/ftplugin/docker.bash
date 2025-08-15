@@ -1,11 +1,12 @@
 source "${HOME}/bin/common.sh"
 
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
+
 #====[ docker ]=============================================
 alias dstop='docker stop $(docker ps -q)'
 alias dnostart='docker update --restart=no $(docker ps --all -q)'
 alias dclean='docker rmi -f $(docker images -f "dangling=true" -q)'
-alias dlogin='ln -s ~/.docker/config.json.keep ~/.docker/config.json'
-alias dlogout='rm -f ~/.docker/config.json'
 
 declare _dImageName
 declare _dService
@@ -13,7 +14,7 @@ declare _dRegistry
 declare _dVersion
 
 function dmount {
-  if [[ -z "$1" ]]; then 
+  if [[ -z "$1" ]]; then
     message_error "must specify a valid containerid"
     return
   fi
@@ -22,8 +23,8 @@ function dmount {
   echo "${resp}" | jq -r '.[].Mounts'
 }
 
-function dimage {
-  args=$(getopt -o s:v:r: --long service:,version:,registry: -n dimage -aq -- "$@")
+function _dimage {
+  args=$(getopt -o s:v:r: --long service:,version:,registry: -n _dimage -aq -- "$@")
 
   _dRegistry='local-registry'
   _dService=$(basename "$(pwd)")
@@ -60,7 +61,7 @@ function dimage {
 
 
 function dbuild {
-  dimage "$@"
+  _dimage "$@"
   args=$(getopt -o pnc:b:f: --long plain,nocache,context:,verbose,buildarg:file: -n dbuild -aq -- "$@")
 
   context='.'
@@ -103,13 +104,14 @@ function dbuild {
 }
 
 function drun {
-  dimage "$@"
-  args=$(getopt -o e:p:u:m: --long env:,port:,user:,mount: -n drun -aq -- "$@")
+  _dimage "$@"
+  args=$(getopt -o e:p:u:m:n: --long env:,port:,user:,mount:,network: -n drun -aq -- "$@")
 
   local user
   local -a ports
   local -a mounts
   local -a envVars
+  local -a network
 
   eval set -- "${args}"
   while :
@@ -119,6 +121,7 @@ function drun {
       -p | --port)  ports+=(-p "$2");   shift 2;;
       -m | --mount) mounts+=(-v "$2");  shift 2;;
       -e | --env)   envVars+=(-e "$2"); shift 2;;
+      -n | --network)   network+=(--network "$2"); shift 2;;
       --) shift; break;;
     esac
   done
@@ -128,14 +131,14 @@ function drun {
   fi
 
   message_alert "$*"
-  docker run -it "${envVars[@]}" "${mounts[@]}" "${user[@]}" "${ports[@]}" "${_dImageName}" "$@"
+  docker run -it "${network[@]}" "${envVars[@]}" "${mounts[@]}" "${user[@]}" "${ports[@]}" "${_dImageName}" "$@"
 }
 
 function dsave {
   local imageName
   local fileName
   if [[ -z "$1" ]]; then
-    dimage "$@"
+    _dimage "$@"
     imageName="${_dImageName}"
     fileName="${_dService,,}.tgz"
   else
@@ -148,4 +151,156 @@ function dsave {
   docker save "$imageName" | gzip > "${fileName}"
 
   ls -lrt "${fileName}"
+}
+
+
+function dps {
+  docker ps --format 'table {{.Names}}\t{{.RunningFor}}\t{{.Status}}\t{{.Ports}}' | sort
+}
+
+function _dselector {
+  unset _dSelectedContianer
+  local -A _dContainers
+  local -a names
+
+  wide=0
+  while IFS=$' ' read -r name image; do
+    _dContainers[${name}]=$image
+    if (( wide < ${#name} )); then
+      wide=${#name}
+    fi
+  done < <(docker ps --format 'table {{.Names}}\t{{.Image}}' | tail -n +2)
+
+  mapfile -t sorted_keys < <(echo "${!_dContainers[@]}" | tr ' ' '\n' | sort)
+
+  if [[ -z "$1" ]]; then
+    message_alert "Contianers" ''
+    idx=0
+    for key in "${sorted_keys[@]}"; do
+      printf "  %02d -- %-${wide}s (%s)\n" "${idx}" "${key}" "${_dContainers[$key]}"
+      ((idx=idx + 1))
+    done
+
+    read -rp "  Select an index: " number
+  else
+    number=$1
+  fi
+
+  if [[ "${number}" =~ ^[0-9]+$ ]]; then
+    _dSelectedContianer="${sorted_keys[$number]}"
+  else
+    for key in "${sorted_keys[@]}"; do
+      if [[ "${key}" == *${number}* ]]; then
+        names+=("$key")
+      fi
+    done
+
+    if [[ "${#names[@]}" == 1 ]]; then
+      svc=${names[0]}
+      _dSelectedContianer="${names[0]}"
+    else
+      echo "Container '${number}' not found; did you mean:"
+      for svc in "${names[@]}"; do
+        echo "  ${svc}"
+      done
+    fi
+  fi
+}
+
+function de {
+  _dselector "$@"
+  message_alert "Logging into ${_dSelectedContianer}"
+
+  cmd=(bash)
+  if [[ -n "$2" ]]; then
+    cmd=("${@:2}")
+  fi
+
+  docker exec -it "${_dSelectedContianer}" "${cmd[@]}"
+}
+
+function der {
+  _dselector "$@"
+  message_alert "Logging into ${_dSelectedContianer}"
+
+  cmd=(bash)
+  if [[ -n "$2" ]]; then
+    cmd=("${@:2}")
+  fi
+
+  docker exec -it --user root "${_dSelectedContianer}" "${cmd[@]}"
+}
+
+function dl {
+  _dselector "$@"
+  message_alert "Tailing logs for ${_dSelectedContianer}"
+  docker logs -f "${_dSelectedContianer}"
+}
+
+function dimg {
+  local -A _dImage
+  local wide
+  wide=0
+
+  while IFS=$' ' read -r image tag size age; do
+    key="${image}:${tag}"
+
+    for arg in "$@"; do
+      key=$(echo "${key}" | grep "${arg}")
+    done
+
+    if [[ -n "${key}" ]]; then
+      _dImage["$key"]=$(printf '%s\t%s' "$size" "$age")
+      str="${key#*/}"
+      if (( wide < ${#str} )); then
+        wide=${#str}
+      fi
+    fi
+  done < <(docker image ls --format 'table {{.Repository}}\t{{.Tag}}\t{{.Size}}\t{{.CreatedSince}}' | tail -n +2)
+
+  mapfile -t sorted_keys < <(echo "${!_dImage[@]}" | tr ' ' '\n' | sort)
+
+  current=''
+  for key in "${sorted_keys[@]}";
+  do
+    repo="${key%%/*}"
+    image="${key#*/}"
+    if [[ "${repo}" != "${current}" ]]; then
+      printf -- "- \033[32m%s/\033[m\n" "${repo}"
+      current="${repo}"
+    fi
+    printf "  - %-${wide}s\t%s\n" "${image}" "${_dImage[$key]}"
+  done
+  # | grep -E "$(IFS='|'; echo "${@[*]}")" | sort)
+}
+
+function dscan {
+  local imageName
+
+  if [[ -z "$1" ]]; then
+    _dimage "$@"
+    imageName="${_dImageName}"
+  else
+    imageName="$1"
+  fi
+
+  message_alert "Scanning ${imageName}"
+  grype "$imageName" 
+}
+
+function dtag {
+  local imageName
+  local tagName
+
+  if [[ -n "$2" ]]; then
+    imageName="$1"
+    tagName="$2"
+  else  
+    _dimage "$@"
+    imageName="${_dImageName}"
+    tagName="$1"
+  fi
+
+  message_alert "Tagging:" "  -- ${imageName}" "  ++ ${tagName}"
+  docker tag "$imageName" "$tagName"
 }

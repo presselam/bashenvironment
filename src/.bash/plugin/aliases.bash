@@ -14,6 +14,9 @@ alias lisa='ls -lisart'
 alias vir='vim -R'
 alias idea='idea64.exe . &'
 
+#====[ improved ]===========================================
+alias cat='batcat --paging=never'
+alias env='env | sort'
 
 #====[ miscellaneous ]======================================
 alias bok='vi ${HOME}/.bok'
@@ -21,7 +24,6 @@ alias junk='vi /tmp/junk.amp'
 alias diff='colordiff'
 alias cpptidy='clang-format -i'
 alias cprofile='valgrind --tool=callgrind'
-alias cat='batcat --paging=never'
 
 
 #====[ GIT ]================================================
